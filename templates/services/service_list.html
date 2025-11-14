@@ -57,7 +57,15 @@
     .price-badge { white-space: nowrap; }
 
     /* Line clamp for descriptions */
-    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    /* Use both standard and vendor-prefixed properties for compatibility */
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        /* standard property for modern linters/browsers */
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
+    }
 
     /* Make overlay buttons more visible on mobile */
     @media (max-width: 640px) {
