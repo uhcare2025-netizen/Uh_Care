@@ -184,6 +184,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 3rem;
+    align-items: start;
 }
 
 .home-stat-card {
@@ -268,6 +269,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2.5rem;
+    align-items: stretch;
+}
+
+@supports (grid-auto-rows: minmax(0, 1fr)) {
+    .home-features-grid {
+        grid-auto-rows: 1fr;
+    }
 }
 
 .home-feature-card {
@@ -808,6 +816,10 @@
         grid-template-columns: 1fr;
     }
 
+    .home-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .service-card-footer,
     .equipment-actions,
     .pharmacy-footer {
@@ -882,5 +894,9 @@
 
     .home-final-cta h2 {
         font-size: 1.6rem;
+    }
+
+    .home-stats-grid {
+        grid-template-columns: 1fr;
     }
 }
