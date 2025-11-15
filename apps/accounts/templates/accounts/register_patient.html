@@ -7,18 +7,17 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 <style>
-    /* Ensure patient pages use blue branding */
+    /* Override primary color to blue for patient pages */
     .auth-sidebar {
         background: linear-gradient(135deg, #004a99 0%, #002d6b 100%);
     }
 
     .btn-auth-primary {
-        background: linear-gradient(135deg, #004a99 0%, #002d6b 100%);
+        background-color: #004a99;
     }
 
     .btn-auth-primary:hover {
         background-color: #002d6b;
-        box-shadow: 0 8px 20px rgba(0, 74, 153, 0.4);
     }
 
     .form-group input:focus,
@@ -51,7 +50,7 @@
             <div class="auth-sidebar-content">
                 <img src="{% static 'images/side-image.png' %}" alt="UH Care" class="auth-sidebar-image">
                 <h2>Join UH Care</h2>
-                <p>Create your patient account to access healthcare services</p>
+                <p>Register to book services, order pharmacy items, and manage your health</p>
                 
                 <div class="auth-sidebar-benefits">
                     <div class="auth-sidebar-benefit">
@@ -60,15 +59,15 @@
                     </div>
                     <div class="auth-sidebar-benefit">
                         <i class="fas fa-file-medical"></i>
-                        <span>Medical Records</span>
+                        <span>Your Records</span>
                     </div>
                     <div class="auth-sidebar-benefit">
-                        <i class="fas fa-message"></i>
-                        <span>Message Doctors</span>
+                        <i class="fas fa-envelope"></i>
+                        <span>Direct Messaging</span>
                     </div>
                     <div class="auth-sidebar-benefit">
                         <i class="fas fa-pills"></i>
-                        <span>Prescription Refills</span>
+                        <span>Pharmacy Orders</span>
                     </div>
                 </div>
             </div>
@@ -77,8 +76,8 @@
         <!-- FORM SECTION -->
         <div class="auth-form-section">
             <div class="auth-form-header">
-                <h1><i class="fas fa-user-plus"></i> Patient Registration</h1>
-                <p>Create your account to get started</p>
+                <h1><i class="fas fa-user-check"></i> Patient Registration</h1>
+                <p>Create your secure account</p>
             </div>
 
             {% if form.errors and not form.non_field_errors %}
@@ -93,9 +92,8 @@
 
             <form method="post" class="auth-form">
                 {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}" />
 
-                <!-- Personal Information Section -->
+                <!-- Personal Information -->
                 <div class="form-section-title">Personal Information</div>
 
                 {% for field in form %}
@@ -108,8 +106,7 @@
                                 {% if field.name == "phone_number" %}<i class="fas fa-phone"></i>{% endif %}
                                 {% if field.name == "date_of_birth" %}<i class="fas fa-birthday-cake"></i>{% endif %}
                                 {% if field.name == "address" %}<i class="fas fa-map-marker-alt"></i>{% endif %}
-                                {% if field.name == "emergency_contact" %}<i class="fas fa-exclamation-circle"></i>{% endif %}
-                                {% if field.name == "medical_history" %}<i class="fas fa-clipboard-list"></i>{% endif %}
+                                {% if field.name == "medical_history" %}<i class="fas fa-file-medical"></i>{% endif %}
                                 {{ field.label }}
                             </label>
                             {{ field }}
@@ -152,7 +149,7 @@
                 {% endfor %}
 
                 <button type="submit" class="btn-auth btn-auth-primary">
-                    <i class="fas fa-user-check"></i> Create Patient Account
+                    <i class="fas fa-check-circle"></i> Create Account
                 </button>
             </form>
 
