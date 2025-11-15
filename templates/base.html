@@ -240,8 +240,8 @@
                 <!-- Footer Section 1: Brand -->
                 <div class="col-span-2 lg:col-span-2">
                     <a href="{% url 'accounts:home' %}" class="flex items-center gap-2">
-                        <img class="h-10 w-auto" 
-                             src="YOUR_LOGO_URL_HERE.jpg" 
+                        <img class="h-12 w-auto rounded-md object-cover" 
+                             src="{% static 'images/side-image.png' %}" 
                              alt="UH Care Logo"
                              onerror="this.src='https://placehold.co/150x40/ffffff/004a9e?text=UH+Care&font=inter'; this.onerror=null;">
                     </a>
@@ -271,20 +271,9 @@
                         <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Blog</a></li>
                     </ul>
                 </div>
-                
-                <!-- Footer Section 4: Support -->
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-100 tracking-wider uppercase">Support</h3>
-                    <ul class="mt-4 space-y-2">
-                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">FAQs</a></li>
-                    </ul>
-                </div>
 
-                <!-- Footer Section 5: Contact -->
-                <div class="col-span-2 lg:col-span-1">
+                <!-- Footer Section 4: Contact -->
+                <div class="col-span-2 lg:col-span-2">
                     <h3 class="text-sm font-semibold text-gray-100 tracking-wider uppercase">Contact</h3>
                     <ul class="mt-4 space-y-2">
                         <li><a href="tel:+9779816582615" class="text-sm text-gray-400 hover:text-white transition-colors">9816582615</a></li>
