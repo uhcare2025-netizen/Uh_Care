@@ -4,310 +4,199 @@
 {% block title %}Patient Registration - UH Care{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* * == UH CARE PROFESSIONAL AUTH STYLES ==
-     * 1. Uses the same professional card layout as the login page.
-     * 2. Styles are adapted for a longer registration form.
-     * 3. Styles all form elements, errors, and help text.
-     */
-
-    :root {
-        /* UH Care Brand Palette */
-        --uh-blue: #004a99;
-        --uh-green: #009e4d;
-        --uh-red: #E60000;
-        --uh-blue-dark: #002d6b;
-
-        /* Theme Variable Mapping */
-        --primary: var(--uh-blue);
-        --secondary: var(--uh-green);
-        --accent: var(--uh-red);
-
-        /* UI Colors */
-        --bg-primary: #FFFFFF;
-        --bg-secondary: #F8F9FA; /* Light Gray for page background */
-        --text-primary: #1C1C1E;
-        --text-secondary: #636366;
-        --border: #E5E5EA;
-        --shadow: rgba(0, 0, 0, 0.05);
-        --shadow-lg: rgba(0, 0, 0, 0.1);
-        --radius-lg: 12px;
-        --radius-md: 8px;
-    }
-
-    /* Apply a light background to the whole page */
-    body {
-        background-color: var(--bg-secondary);
-    }
-
-    /* The main card, made wider for the registration form */
-    .auth-container {
-        max-width: 650px; /* Wider than login for more form fields */
-        margin: 4rem auto;
-        padding: 2.5rem 3rem; /* More horizontal padding */
-        background: var(--bg-primary);
-        border-radius: var(--radius-lg);
-        box-shadow: 0 10px 30px var(--shadow-lg);
-        border-top: 5px solid var(--primary);
-    }
-
-    .auth-container h2 {
-        text-align: center;
-        font-size: 2.25rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-top: 0;
-        margin-bottom: 2rem;
-    }
-
-    /* Form Styling */
-    .auth-form .mb-3 {
-        margin-bottom: 1.25rem; /* Spacing for each form group */
-    }
-
-    .auth-form .form-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
-    /* Unified style for all inputs */
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    input[type="tel"],
-    input[type="date"],
-    textarea {
-        width: 100%;
-        padding: 0.85rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        box-sizing: border-box; /* Ensures padding doesn't break layout */
-    }
-
-    textarea {
-        min-height: 120px;
-        resize: vertical;
-    }
-    
-    input[type="date"] {
-        /* Provides consistent appearance for date fields */
-        color: var(--text-primary);
-    }
-
-    input:focus, textarea:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(0, 74, 153, 0.2);
-    }
-
-    /* Help text styling */
-    .form-text {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-    }
-
-    /* Error text styling */
-    .text-danger.small {
-        color: var(--uh-red);
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
-    }
-    .text-danger { /* Fallback for .small */
-        color: var(--uh-red);
-    }
-
-    /* Submit Button */
-    .btn-primary {
-        width: 100%;
-        padding: 0.9rem 1rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        border-radius: var(--radius-md);
-        background-color: var(--primary);
-        border-color: var(--primary);
-        transition: all 0.3s ease;
-        margin-top: 1rem;
-    }
-
-    .btn-primary:hover {
-        background-color: var(--uh-blue-dark);
-        border-color: var(--uh-blue-dark);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 74, 153, 0.25);
-    }
-
-    /* Alert Styling */
-    .alert {
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        border-radius: var(--radius-md);
-        border: 1px solid transparent;
-        font-size: 0.95rem;
-    }
-    .alert-danger {
-        background: #f8d7da;
-        color: #721c24;
-        border-color: #f5c6cb;
-    }
-    .alert-success {
-        background: #d4edda;
-        color: #155724;
-        border-color: #c3e6cb;
-    }
-
-    /* Bottom Links (Login, etc.) */
-    .auth-links {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--border);
-        text-align: center;
-    }
-
-    .auth-links p {
-        margin: 0.75rem 0;
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
-
-    .auth-links a {
-        font-weight: 600;
-        text-decoration: none;
-    }
-    
-    /* Login link */
-    .auth-links a[href*="login"] {
-        color: var(--primary);
-    }
-    
-    /* Provider link */
-    .auth-links a[href*="register_provider"] {
-        color: var(--secondary); /* Use brand green */
-    }
-
-    .auth-links a:hover {
-        text-decoration: underline;
-    }
-
-</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 
 {% block content %}
-<div class="auth-container">
-    <h2>Patient Registration</h2>
-    <form method="post" class="auth-form">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}" />
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <div class="alert {{ message.tags }}">{{ message }}</div>
-                {% endfor %}
+<div class="auth-page">
+    <div class="auth-page-bg">
+        <video autoplay muted loop playsinline>
+            <source src="{% static 'videos/Back-ground.mp4' %}" type="video/mp4">
+        </video>
+        <div class="auth-page-overlay"></div>
+    </div>
+
+    <div class="auth-container">
+        <!-- SIDEBAR -->
+        <div class="auth-sidebar">
+            <div class="auth-sidebar-content">
+                <img src="{% static 'images/side-image.png' %}" alt="UH Care" class="auth-sidebar-image">
+                <h2>Join UH Care</h2>
+                <p>Create your patient account to access healthcare services</p>
+                
+                <div class="auth-sidebar-benefits">
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Easy Scheduling</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-file-medical"></i>
+                        <span>Medical Records</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-message"></i>
+                        <span>Message Doctors</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-pills"></i>
+                        <span>Prescription Refills</span>
+                    </div>
+                </div>
             </div>
-        {% endif %}
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-        {% endif %}
-
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.first_name.id_for_label }}">First name</label>
-            {{ form.first_name }}
-            {% if form.first_name.errors %}
-                <div class="text-danger small">{{ form.first_name.errors|striptags }}</div>
-            {% endif %}
         </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.last_name.id_for_label }}">Last name</label>
-            {{ form.last_name }}
-            {% if form.last_name.errors %}
-                <div class="text-danger small">{{ form.last_name.errors|striptags }}</div>
-            {% endif %}
-        </div>
+        <!-- FORM SECTION -->
+        <div class="auth-form-section" style="max-height: 90vh; overflow-y: auto;">
+            <div class="auth-form-header">
+                <h1><i class="fas fa-user-plus"></i> Patient Registration</h1>
+                <p>Create your account to get started</p>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.email.id_for_label }}">Email address</label>
-            {{ form.email }}
-            {% if form.email.help_text %}
-                <div class="form-text">{{ form.email.help_text }}</div>
+            {% if messages %}
+                <div>
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
             {% endif %}
-            {% if form.email.errors %}
-                <div class="text-danger small">{{ form.email.errors|striptags }}</div>
-            {% endif %}
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone number</label>
-            {{ form.phone_number }}
-            {% if form.phone_number.errors %}
-                <div class="text-danger small">{{ form.phone_number.errors|striptags }}</div>
-            {% endif %}
-        </div>
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}" />
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of birth</label>
-            {{ form.date_of_birth }}
-            {% if form.date_of_birth.errors %}
-                <div class="text-danger small">{{ form.date_of_birth.errors|striptags }}</div>
-            {% endif %}
-        </div>
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.address.id_for_label }}">Address</label>
-            {{ form.address }}
-            {% if form.address.errors %}
-                <div class="text-danger small">{{ form.address.errors|striptags }}</div>
-            {% endif %}
-        </div>
+                <!-- Personal Information Section -->
+                <div class="form-section-title">Personal Information</div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.emergency_contact.id_for_label }}">Emergency contact</label>
-            {{ form.emergency_contact }}
-            {% if form.emergency_contact.errors %}
-                <div class="text-danger small">{{ form.emergency_contact.errors|striptags }}</div>
-            {% endif %}
-        </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}"><i class="fas fa-user"></i> {{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <ul class="field-errors">{% for error in form.first_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        {% endif %}
+                    </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.medical_history.id_for_label }}">Medical history</label>
-            {{ form.medical_history }}
-            {% if form.medical_history.errors %}
-                <div class="text-danger small">{{ form.medical_history.errors|striptags }}</div>
-            {% endif %}
-        </div>
+                    <div class="form-group">
+                        <label for="{{ form.last_name.id_for_label }}"><i class="fas fa-user"></i> {{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <ul class="field-errors">{% for error in form.last_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        {% endif %}
+                    </div>
+                </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.password1.id_for_label }}">Password</label>
-            {{ form.password1 }}
-            {% if form.password1.help_text %}
-                <div class="form-text">{{ form.password1.help_text }}</div>
-            {% endif %}
-            {% if form.password1.errors %}
-                <div class="text-danger small">{{ form.password1.errors|striptags }}</div>
-            {% endif %}
-        </div>
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}"><i class="fas fa-envelope"></i> {{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <ul class="field-errors">{% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="{{ form.password2.id_for_label }}">Confirm password</label>
-            {{ form.password2 }}
-            {% if form.password2.errors %}
-                <div class="text-danger small">{{ form.password2.errors|striptags }}</div>
-            {% endif %}
-        </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="{{ form.phone_number.id_for_label }}"><i class="fas fa-phone"></i> {{ form.phone_number.label }}</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <ul class="field-errors">{% for error in form.phone_number.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        {% endif %}
+                    </div>
 
-        <button type="submit" class="btn btn-primary">Register</button>
-    </form>
-    <div class="auth-links">
-        <p>Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
-        <p>Are you a healthcare provider? <a href="{% url 'accounts:register_provider' %}">Register as Provider</a></p>
+                    <div class="form-group">
+                        <label for="{{ form.date_of_birth.id_for_label }}"><i class="fas fa-birthday-cake"></i> {{ form.date_of_birth.label }}</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}
+                            <ul class="field-errors">{% for error in form.date_of_birth.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Address & Emergency -->
+                <div class="form-section-title">Address & Emergency Contact</div>
+
+                <div class="form-group">
+                    <label for="{{ form.address.id_for_label }}"><i class="fas fa-map-marker-alt"></i> {{ form.address.label }}</label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <ul class="field-errors">{% for error in form.address.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.emergency_contact.id_for_label }}"><i class="fas fa-exclamation-circle"></i> {{ form.emergency_contact.label }}</label>
+                    {{ form.emergency_contact }}
+                    {% if form.emergency_contact.errors %}
+                        <ul class="field-errors">{% for error in form.emergency_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Medical History -->
+                <div class="form-section-title">Medical History</div>
+
+                <div class="form-group">
+                    <label for="{{ form.medical_history.id_for_label }}"><i class="fas fa-clipboard-list"></i> {{ form.medical_history.label }}</label>
+                    {{ form.medical_history }}
+                    {% if form.medical_history.errors %}
+                        <ul class="field-errors">{% for error in form.medical_history.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="form-section-title">Account Security</div>
+
+                <div class="form-group">
+                    <label for="{{ form.password1.id_for_label }}"><i class="fas fa-lock"></i> {{ form.password1.label }}</label>
+                    {{ form.password1 }}
+                    {% if form.password1.help_text %}
+                        <div class="form-text">{{ form.password1.help_text }}</div>
+                    {% endif %}
+                    {% if form.password1.errors %}
+                        <ul class="field-errors">{% for error in form.password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password2.id_for_label }}"><i class="fas fa-lock"></i> {{ form.password2.label }}</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <ul class="field-errors">{% for error in form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-auth btn-auth-primary">
+                    <i class="fas fa-user-check"></i> Create Patient Account
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <p>Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
+                <p>Are you a healthcare provider? <a href="{% url 'accounts:register_provider' %}">Register as Provider</a></p>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .form-section-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #004a99;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e5ea;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-section-title:first-child {
+        margin-top: 0;
+    }
+</style>
 {% endblock %}

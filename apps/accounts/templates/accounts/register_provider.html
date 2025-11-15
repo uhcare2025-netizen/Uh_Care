@@ -4,214 +4,180 @@
 {% block title %}Provider Registration - UH Care{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 <style>
-    /* * == UH CARE PROFESSIONAL AUTH STYLES (PROVIDER) ==
-     * 1. Uses the same professional card layout.
-     * 2. Themed with the brand's SECONDARY GREEN color for providers.
-     * 3. Styles all form elements, errors, and help text from `form.as_p`.
-     */
-
-    :root {
-        /* UH Care Brand Palette */
-        --uh-blue: #004a99;
-        --uh-green: #009e4d;
-        --uh-red: #E60000;
-        --uh-green-dark: #007a3d; /* Darker green for hover */
-
-        /* Theme Variable Mapping */
-        --primary: var(--uh-blue);
-        --secondary: var(--uh-green);
-        --accent: var(--uh-red);
-
-        /* UI Colors */
-        --bg-primary: #FFFFFF;
-        --bg-secondary: #F8F9FA; /* Light Gray for page background */
-        --text-primary: #1C1C1E;
-        --text-secondary: #636366;
-        --border: #E5E5EA;
-        --shadow: rgba(0, 0, 0, 0.05);
-        --shadow-lg: rgba(0, 0, 0, 0.1);
-        --radius-lg: 12px;
-        --radius-md: 8px;
+    /* Override primary color to green for provider pages */
+    .auth-sidebar {
+        background: linear-gradient(135deg, #009e4d 0%, #007a3d 100%);
     }
 
-    /* Apply a light background to the whole page */
-    body {
-        background-color: var(--bg-secondary);
+    .btn-auth-primary {
+        background-color: #009e4d;
     }
 
-    /* The main card, themed with PROVIDER GREEN */
-    .auth-container {
-        max-width: 650px; /* Wider for registration fields */
-        margin: 4rem auto;
-        padding: 2.5rem 3rem;
-        background: var(--bg-primary);
-        border-radius: var(--radius-lg);
-        box-shadow: 0 10px 30px var(--shadow-lg);
-        /* Provider Green accent */
-        border-top: 5px solid var(--secondary); 
+    .btn-auth-primary:hover {
+        background-color: #007a3d;
     }
 
-    .auth-container h2 {
-        text-align: center;
-        font-size: 2.25rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-top: 0;
-        margin-bottom: 2rem;
-    }
-
-    /* Form Styling for {{ form.as_p }} */
-    .auth-form p {
-        margin-bottom: 1.25rem; /* Each <p> is a form group */
-    }
-    
-    .auth-form p label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
-    /* Unified style for all inputs */
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    input[type="tel"],
-    input[type="date"],
-    input[type="number"],
-    input[type="file"],
-    textarea,
-    select {
-        width: 100%;
-        padding: 0.85rem 1rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        box-sizing: border-box; 
-    }
-
-    textarea {
-        min-height: 120px;
-        resize: vertical;
-    }
-
-    input:focus, textarea:focus, select:focus {
-        outline: none;
-        border-color: var(--secondary); /* Green focus */
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        border-color: #009e4d;
         box-shadow: 0 0 0 3px rgba(0, 158, 77, 0.2);
     }
-    
-    /* Help text styling from form.as_p */
-    .auth-form .helptext {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-    }
 
-    /* Error list styling from form.as_p */
-    .auth-form .errorlist {
-        color: var(--uh-red);
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
-        list-style: none;
-        padding-left: 0;
+    .form-section-title {
+        border-bottom-color: #009e4d;
+        color: #009e4d;
     }
-
-    /* Submit Button (PROVIDER GREEN) */
-    .btn-primary {
-        width: 100%;
-        padding: 0.9rem 1rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        border-radius: var(--radius-md);
-        background-color: var(--secondary); /* Green */
-        border-color: var(--secondary); /* Green */
-        color: white;
-        transition: all 0.3s ease;
-        margin-top: 1rem;
-    }
-
-    .btn-primary:hover {
-        background-color: var(--uh-green-dark); /* Darker Green */
-        border-color: var(--uh-green-dark); /* Darker Green */
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 158, 77, 0.25);
-    }
-
-    /* Alert Styling */
-    .alert {
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        border-radius: var(--radius-md);
-        border: 1px solid transparent;
-        font-size: 0.95rem;
-    }
-    .alert-danger {
-        background: #f8d7da;
-        color: #721c24;
-        border-color: #f5c6cb;
-    }
-
-    /* Bottom Links (Login, etc.) */
-    .auth-links {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--border);
-        text-align: center;
-    }
-
-    .auth-links p {
-        margin: 0.75rem 0;
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
-
-    .auth-links a {
-        font-weight: 600;
-        text-decoration: none;
-    }
-    
-    .auth-links a[href*="login"] {
-        color: var(--primary); /* Blue for login */
-    }
-    .auth-links a[href*="register_patient"] {
-        color: var(--primary); /* Blue for patient */
-    }
-
-    .auth-links a:hover {
-        text-decoration: underline;
-    }
-
 </style>
 {% endblock %}
 
 
 {% block content %}
-<div class="auth-container">
-    <h2>Healthcare Provider Registration</h2>
-    <form method="post" class-="auth-form">
-        {% csrf_token %}
-        {% if form.errors and not form.non_field_errors %}
-            <div class="alert alert-danger">
-                Please correct the errors below.
+<div class="auth-page">
+    <div class="auth-page-bg">
+        <video autoplay muted loop playsinline>
+            <source src="{% static 'videos/Back-ground.mp4' %}" type="video/mp4">
+        </video>
+        <div class="auth-page-overlay"></div>
+    </div>
+
+    <div class="auth-container">
+        <!-- SIDEBAR -->
+        <div class="auth-sidebar">
+            <div class="auth-sidebar-content">
+                <img src="{% static 'images/side-image.png' %}" alt="UH Care" class="auth-sidebar-image">
+                <h2>Join Our Team</h2>
+                <p>Register as a healthcare provider and reach more patients</p>
+                
+                <div class="auth-sidebar-benefits">
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>Grow Your Practice</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-users"></i>
+                        <span>Connect with Patients</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Manage Your Schedule</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-lock"></i>
+                        <span>HIPAA Compliant</span>
+                    </div>
+                </div>
             </div>
-        {% endif %}
-        {% if form.non_field_errors %}
-             <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-        {% endif %}
-        
-        {{ form.as_p }}
-        
-        <button type="submit" class="btn btn-primary">Register as Provider</button>
-    </form>
-    <div class="auth-links">
-        <p>Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
-        <p>Are you a patient? <a href="{% url 'accounts:register_patient' %}">Register as Patient</a></p>
+        </div>
+
+        <!-- FORM SECTION -->
+        <div class="auth-form-section" style="max-height: 90vh; overflow-y: auto;">
+            <div class="auth-form-header">
+                <h1><i class="fas fa-user-md"></i> Healthcare Provider Registration</h1>
+                <p>Create your professional account</p>
+            </div>
+
+            {% if form.errors and not form.non_field_errors %}
+                <div class="alert alert-danger">
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="form-section-title">Professional Information</div>
+
+                {% for field in form %}
+                    {% if field.name not in "password1,password2" %}
+                        <div class="form-group {% if field.errors %}has-error{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                {% if field.name == "first_name" %}<i class="fas fa-user"></i>{% endif %}
+                                {% if field.name == "last_name" %}<i class="fas fa-user"></i>{% endif %}
+                                {% if field.name == "email" %}<i class="fas fa-envelope"></i>{% endif %}
+                                {% if field.name == "specialization" %}<i class="fas fa-stethoscope"></i>{% endif %}
+                                {% if field.name == "license_number" %}<i class="fas fa-certificate"></i>{% endif %}
+                                {% if field.name == "phone_number" %}<i class="fas fa-phone"></i>{% endif %}
+                                {% if field.name == "experience_years" %}<i class="fas fa-briefcase"></i>{% endif %}
+                                {% if field.name == "hospital_affiliation" %}<i class="fas fa-hospital"></i>{% endif %}
+                                {% if field.name == "bio" %}<i class="fas fa-file-alt"></i>{% endif %}
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <ul class="field-errors">
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Account Security -->
+                <div class="form-section-title">Account Security</div>
+
+                {% for field in form %}
+                    {% if field.name == "password1" or field.name == "password2" %}
+                        <div class="form-group {% if field.errors %}has-error{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                <i class="fas fa-lock"></i> {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <ul class="field-errors">
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <button type="submit" class="btn-auth btn-auth-primary">
+                    <i class="fas fa-check-circle"></i> Register as Provider
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <p>Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
+                <p>Are you a patient? <a href="{% url 'accounts:register_patient' %}">Register as Patient</a></p>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .form-section-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #009e4d;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e5ea;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-section-title:first-child {
+        margin-top: 0;
+    }
+</style>
 {% endblock %}
