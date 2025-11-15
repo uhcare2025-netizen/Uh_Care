@@ -353,11 +353,18 @@
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+    .auth-container {
+        max-width: 1200px;
+        margin: 1rem auto;
+    }
+}
+
+@media (max-width: 768px) {
     .auth-container {
         grid-template-columns: 1fr;
         max-width: 500px;
-        margin: 2rem auto;
+        margin: 1rem auto;
     }
 
     .auth-sidebar {
@@ -374,27 +381,12 @@
         padding: 2rem;
         border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
-}
 
-@media (max-width: 768px) {
-    .auth-container {
-        margin: 1rem;
-        border-radius: var(--radius-md);
-    }
-
-    .auth-sidebar {
-        padding: 1.5rem;
-    }
-
-    .auth-sidebar h2 {
+    .auth-form-header h1 {
         font-size: 1.5rem;
     }
 
-    .auth-form-section {
-        padding: 1.5rem;
-    }
-
-    .auth-form-header h1 {
+    .auth-sidebar h2 {
         font-size: 1.5rem;
     }
 
