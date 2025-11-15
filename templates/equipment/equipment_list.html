@@ -64,6 +64,10 @@
                   <div class="h-56 w-full">
                     <img src="{{ item.image_url }}" alt="{{ item.name }}" class="w-full h-full object-cover" />
                   </div>
+                  {% elif item.image %}
+                  <div class="h-56 w-full">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover" />
+                  </div>
                   {% else %}
                   <!-- Professional Icon Fallback -->
                   <div class="w-full h-56 bg-gradient-to-br from-uh-blue-600 to-blue-400 flex items-center justify-center">
@@ -89,11 +93,11 @@
                                 
                     <!-- Pricing -->
                     <div class="space-y-1 mb-4">
-                      {% if item.rent_price_daily %}
-                      <p class="text-sm text-gray-700"><strong>Rent:</strong> <span class="font-bold text-gray-800">रू {{ item.rent_price_daily }}/day</span></p>
+                      {% if item.price_per_day or item.rent_price_daily %}
+                      <p class="text-sm text-gray-700"><strong>Rent:</strong> <span class="font-bold text-gray-800">रू {{ item.price_per_day|default:item.rent_price_daily|floatformat:0 }}/day</span></p>
                       {% endif %}
                       {% if item.purchase_price %}
-                      <p class="text-sm text-gray-700"><strong>Buy:</strong> <span class="font-bold text-gray-800">रू {{ item.purchase_price }}</span></p>
+                      <p class="text-sm text-gray-700"><strong>Buy:</strong> <span class="font-bold text-gray-800">रू {{ item.purchase_price|floatformat:0 }}</span></p>
                       {% endif %}
                     </div>
                                 

@@ -225,15 +225,27 @@
                 {% for eq in equipments|slice:":3" %}
                     <div class="equipment-card">
                         <div class="equipment-image">
-                            <div class="equipment-placeholder">
-                                <i class="fas fa-cube"></i>
-                            </div>
+                            {% if eq.image_url %}
+                                <img src="{{ eq.image_url }}" alt="{{ eq.name }}" />
+                            {% elif eq.image %}
+                                <img src="{{ eq.image.url }}" alt="{{ eq.name }}" />
+                            {% else %}
+                                <div class="equipment-placeholder">
+                                    <i class="fas fa-cube"></i>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="equipment-content">
                             <h3>{{ eq.name }}</h3>
                             <p>{{ eq.short_description|default:eq.description|truncatechars:90 }}</p>
                             <div class="equipment-price">
-                                रू {{ eq.price|default:'0' }}
+                                {% if eq.availability == 'rent' or eq.availability == 'both' %}
+                                    रू {{ eq.price_per_day|floatformat:0 }}/day
+                                {% elif eq.availability == 'buy' or eq.availability == 'both' %}
+                                    रू {{ eq.purchase_price|floatformat:0 }}
+                                {% else %}
+                                    रू 0
+                                {% endif %}
                             </div>
                             <div class="equipment-actions">
                                 {% if eq.availability == 'rent' or eq.availability == 'both' %}

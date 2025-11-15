@@ -23,18 +23,32 @@ class EquipmentCategory(models.Model):
 
 
 class Equipment(models.Model):
+    CONDITION_CHOICES = (
+        ('new', 'New'),
+        ('excellent', 'Excellent'),
+        ('good', 'Good'),
+        ('fair', 'Fair'),
+    )
+
     category = models.ForeignKey(EquipmentCategory, on_delete=models.SET_NULL, null=True, related_name='equipments')
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True)
+    short_description = models.CharField(max_length=300, blank=True, help_text="Brief description for listings")
     image_url = models.URLField(blank=True, null=True)
     # Local image upload for equipment
     image = models.ImageField(upload_to='equipment/', blank=True, null=True)
-    price_per_day = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    price_per_day = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], default=Decimal('0.00'))
+    rent_price_daily = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], default=Decimal('0.00'), help_text="Alias for price_per_day")
     rent_price_weekly = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], default=Decimal('0.00'))
     rent_price_monthly = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], default=Decimal('0.00'))
     security_deposit = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], default=Decimal('0.00'))
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], default=Decimal('0.00'))
+    brand = models.CharField(max_length=100, blank=True, help_text="Equipment brand/manufacturer")
+    model_number = models.CharField(max_length=100, blank=True, help_text="Model number or identifier")
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='excellent')
+    specifications = models.TextField(blank=True, help_text="Technical specifications")
+    usage_instructions = models.TextField(blank=True, help_text="How to use this equipment")
     
     @property
     def is_available(self):
