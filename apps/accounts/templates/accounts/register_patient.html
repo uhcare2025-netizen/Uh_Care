@@ -54,120 +54,75 @@
                 <p>Create your account to get started</p>
             </div>
 
-            {% if messages %}
-                <div>
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-                    {% endfor %}
+            {% if form.errors and not form.non_field_errors %}
+                <div class="alert alert-danger">
+                    Please correct the errors below.
                 </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
             {% endif %}
 
             <form method="post" class="auth-form">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}" />
 
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-                {% endif %}
-
                 <!-- Personal Information Section -->
                 <div class="form-section-title">Personal Information</div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="{{ form.first_name.id_for_label }}"><i class="fas fa-user"></i> {{ form.first_name.label }}</label>
-                        {{ form.first_name }}
-                        {% if form.first_name.errors %}
-                            <ul class="field-errors">{% for error in form.first_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.last_name.id_for_label }}"><i class="fas fa-user"></i> {{ form.last_name.label }}</label>
-                        {{ form.last_name }}
-                        {% if form.last_name.errors %}
-                            <ul class="field-errors">{% for error in form.last_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.email.id_for_label }}"><i class="fas fa-envelope"></i> {{ form.email.label }}</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <ul class="field-errors">{% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% for field in form %}
+                    {% if field.name not in "password1,password2" %}
+                        <div class="form-group {% if field.errors %}has-error{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                {% if field.name == "first_name" %}<i class="fas fa-user"></i>{% endif %}
+                                {% if field.name == "last_name" %}<i class="fas fa-user"></i>{% endif %}
+                                {% if field.name == "email" %}<i class="fas fa-envelope"></i>{% endif %}
+                                {% if field.name == "phone_number" %}<i class="fas fa-phone"></i>{% endif %}
+                                {% if field.name == "date_of_birth" %}<i class="fas fa-birthday-cake"></i>{% endif %}
+                                {% if field.name == "address" %}<i class="fas fa-map-marker-alt"></i>{% endif %}
+                                {% if field.name == "emergency_contact" %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                                {% if field.name == "medical_history" %}<i class="fas fa-clipboard-list"></i>{% endif %}
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <ul class="field-errors">
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
                     {% endif %}
-                </div>
+                {% endfor %}
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="{{ form.phone_number.id_for_label }}"><i class="fas fa-phone"></i> {{ form.phone_number.label }}</label>
-                        {{ form.phone_number }}
-                        {% if form.phone_number.errors %}
-                            <ul class="field-errors">{% for error in form.phone_number.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.date_of_birth.id_for_label }}"><i class="fas fa-birthday-cake"></i> {{ form.date_of_birth.label }}</label>
-                        {{ form.date_of_birth }}
-                        {% if form.date_of_birth.errors %}
-                            <ul class="field-errors">{% for error in form.date_of_birth.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Address & Emergency -->
-                <div class="form-section-title">Address & Emergency Contact</div>
-
-                <div class="form-group">
-                    <label for="{{ form.address.id_for_label }}"><i class="fas fa-map-marker-alt"></i> {{ form.address.label }}</label>
-                    {{ form.address }}
-                    {% if form.address.errors %}
-                        <ul class="field-errors">{% for error in form.address.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.emergency_contact.id_for_label }}"><i class="fas fa-exclamation-circle"></i> {{ form.emergency_contact.label }}</label>
-                    {{ form.emergency_contact }}
-                    {% if form.emergency_contact.errors %}
-                        <ul class="field-errors">{% for error in form.emergency_contact.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                    {% endif %}
-                </div>
-
-                <!-- Medical History -->
-                <div class="form-section-title">Medical History</div>
-
-                <div class="form-group">
-                    <label for="{{ form.medical_history.id_for_label }}"><i class="fas fa-clipboard-list"></i> {{ form.medical_history.label }}</label>
-                    {{ form.medical_history }}
-                    {% if form.medical_history.errors %}
-                        <ul class="field-errors">{% for error in form.medical_history.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                    {% endif %}
-                </div>
-
-                <!-- Password -->
+                <!-- Account Security -->
                 <div class="form-section-title">Account Security</div>
 
-                <div class="form-group">
-                    <label for="{{ form.password1.id_for_label }}"><i class="fas fa-lock"></i> {{ form.password1.label }}</label>
-                    {{ form.password1 }}
-                    {% if form.password1.help_text %}
-                        <div class="form-text">{{ form.password1.help_text }}</div>
+                {% for field in form %}
+                    {% if field.name == "password1" or field.name == "password2" %}
+                        <div class="form-group {% if field.errors %}has-error{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                <i class="fas fa-lock"></i> {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <ul class="field-errors">
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
                     {% endif %}
-                    {% if form.password1.errors %}
-                        <ul class="field-errors">{% for error in form.password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.password2.id_for_label }}"><i class="fas fa-lock"></i> {{ form.password2.label }}</label>
-                    {{ form.password2 }}
-                    {% if form.password2.errors %}
-                        <ul class="field-errors">{% for error in form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                    {% endif %}
-                </div>
+                {% endfor %}
 
                 <button type="submit" class="btn-auth btn-auth-primary">
                     <i class="fas fa-user-check"></i> Create Patient Account
