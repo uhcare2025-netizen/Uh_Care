@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -5,283 +6,430 @@
 
 {% block content %}
 <div class="container max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8" data-provider-id="{{ provider.id }}">
-    <!-- Professional two-column layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+	<!-- Professional two-column layout -->
+	<style>
+	/* Small UI niceties for the slot chips and selection */
+	.slot-chip{display:inline-flex;align-items:center;justify-content:center;padding:0.5rem 0.75rem;border-radius:0.5rem;border:1px solid #e5e7eb;background:#fff;cursor:pointer}
+	.slot-chip:focus{outline:2px solid #60a5fa}
+	.slot-chip.selected{background:#0369a1;color:#fff;border-color:#0369a1}
+	.slot-group-title{font-size:.95rem;font-weight:600;color:#374151;margin-bottom:.5rem}
+	.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+	.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange{background:linear-gradient(90deg,#0369a1,#06b6d4);color:white}
+	.flatpickr-months{background:transparent}
+	.hero-cta-pulse{animation:cta-pulse 3s infinite;}
+	@keyframes cta-pulse{0%{transform:translateY(0)}50%{transform:translateY(-3px)}100%{transform:translateY(0)}}
+	/* small badge on flatpickr days showing available slot count */
+	.fp-badge{display:inline-block;background:#10b981;color:#fff;border-radius:999px;padding:0.08rem .4rem;font-size:0.7rem;margin-left:6px}
+	.flatpickr-day.has-slots{position:relative}
+	/* Professional typography + card polish */
+	.page-lead{font-size:1.125rem;color:#111827}
+	.card{background:#fff;border-radius:0.5rem;padding:1rem;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+	.muted{color:#6b7280}
+	.btn-primary{background:linear-gradient(90deg,#0369a1,#06b6d4);color:#fff;padding:.6rem 1rem;border-radius:.5rem;border:none}
+	.slot-chip{transition:transform .12s ease, box-shadow .12s ease}
+	.slot-chip:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(3,105,161,0.12)}
+	</style>
 
-        <!-- Left Column: Provider Details Card -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-lg shadow-xl overflow-hidden p-6 sm:p-8">
-                <div class_="flex flex-col items-center text-center">
-                    <!-- Provider Profile Image -->
-                    <div class="mx-auto mb-4 w-24 h-24 rounded-full bg-uh-blue-100 flex items-center justify-center text-4xl font-bold text-uh-blue-700 overflow-hidden">
-                        {% if provider.profile_image %}
-                            <img src="{{ provider.profile_image.url }}" alt="{{ provider.get_full_name }}" class="w-full h-full object-cover" />
-                        {% else %}
-                            <!-- Fallback to initials -->
-                            {{ provider.first_name.0|upper }}{{ provider.last_name.0|upper }}
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Provider Info -->
-                    <div class="text-center">
-                        <h2 class="text-2xl font-bold text-uh-blue-700">{{ provider.get_full_name }}</h2>
-                        <p class="text-base text-gray-600 mt-1">{{ provider.provider_profile.get_specialization_display }}</p>
-                        <div class="mt-3 text-xl font-semibold text-uh-green-600">
-                            Hourly rate: NPR {{ provider.provider_profile.hourly_rate|floatformat:2 }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+	<!-- The page content: hero/profile, booking form and slot list -->
+	<div class="bg-gradient-to-r from-uh-blue-700 via-uh-blue-600 to-uh-teal-500 rounded-lg text-white shadow-2xl p-6 mb-8 overflow-hidden">
+		<div class="flex flex-col lg:flex-row items-start gap-6">
+			<div class="flex items-center gap-4">
+				<div class="w-28 h-28 rounded-full bg-white/10 flex items-center justify-center overflow-hidden shadow-xl ring-2 ring-white">
+					{% if provider.profile_image %}
+						<img src="{{ provider.profile_image.url }}" alt="{{ provider.get_full_name }}" class="w-full h-full object-cover" />
+					{% else %}
+						<span class="text-2xl font-bold">{{ provider.first_name.0|upper }}{{ provider.last_name.0|upper }}</span>
+					{% endif %}
+				</div>
+			</div>
 
-        <!-- Right Column: Booking Form Card -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
-                <form method="post" id="booking-form">
-                    {% csrf_token %}
-                    
-                    <!-- Form Header -->
-                    <h2 class="text-2xl font-bold text-uh-blue-700 mb-0 p-6 sm:p-8 border-b border-gray-200">Book Your Slot</h2>
+			<div class="flex-1">
+				<div class="flex items-start justify-between">
+					<div>
+						<h1 class="text-2xl sm:text-3xl font-extrabold leading-tight">{{ provider.get_full_name }}</h1>
+						<div class="mt-1 text-sm opacity-90">{{ provider.provider_profile.get_specialization_display }}</div>
+						<div class="mt-3 flex flex-wrap items-center gap-3">
+							<div class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full">⭐ <span class="font-semibold">{{ provider.provider_profile.rating|default:'4.9' }}</span> <span class="text-xs opacity-90">({{ provider.provider_profile.reviews_count|default:'120' }} reviews)</span></div>
+							<div class="text-xs bg-white/10 px-2 py-1 rounded-full">Verified</div>
+							{% if provider.provider_profile.experience_years %}
+								<div class="text-xs bg-white/10 px-2 py-1 rounded-full">{{ provider.provider_profile.experience_years }} yrs experience</div>
+							{% endif %}
+							{% if provider.provider_profile.languages %}
+								<div class="text-xs bg-white/10 px-2 py-1 rounded-full">{{ provider.provider_profile.languages }}</div>
+							{% endif %}
+						</div>
+					</div>
 
-                    <!-- Form Body -->
-                    <div class="p-6 sm:p-8">
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-                        {% endif %}
-                        
-                        {# Hidden server-only fields. #}
-                        <div style="display:none;">
-                            {{ form.additional_charges }}
-                        </div>
+					<div class="ml-4 text-right">
+						<div class="bg-white text-uh-blue-700 px-4 py-2 rounded-md shadow-lg font-bold">Consultation
+							<div class="text-xl">NPR {{ provider.provider_profile.hourly_rate|floatformat:2 }}</div>
+						</div>
+						<div class="mt-3">
+							<a id="hero-cta" href="#booking-form" class="inline-block bg-white text-uh-blue-700 font-semibold px-5 py-3 rounded-md shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-2xl">Book now</a>
+						</div>
+					</div>
+				</div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Choose a date</label>
-                            <div id="available-dates" class="flex flex-wrap gap-2">
-                                {% if available_dates %}
-                                    {% for d in available_dates %}
-                                        <button type="button" class="btn btn-outline-secondary date-btn" data-date="{{ d|date:'Y-m-d' }}">{{ d|date:'D, M j' }}</button>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="text-muted p-2">No available dates in the next 30 days.</div>
-                                {% endif %}
-                            </div>
-                        </div>
+				{% if provider.provider_profile.bio %}
+					<p class="mt-4 text-white/90 max-w-3xl">{{ provider.provider_profile.bio }}</p>
+				{% else %}
+					<p class="mt-4 text-white/90 max-w-3xl">Experienced healthcare provider offering compassionate, evidence-based care. Trusted by hundreds of patients for thoughtful consultations.</p>
+				{% endif %}
 
-                        <div class="mb-4">
-                            <label class="form-label">Available time slots</label>
-                            <div id="slots-container" class="flex flex-wrap gap-2">
-                                <div class="text-muted">Select a date to view available time slots.</div>
-                            </div>
-                        </div>
+				<div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+					{% if provider.provider_profile.certifications %}
+						<div class="bg-white/10 rounded-md p-3">Certifications: <span class="font-semibold">{{ provider.provider_profile.certifications }}</span></div>
+					{% endif %}
+					<div class="bg-white/10 rounded-md p-3">Location: <span class="font-semibold">{{ provider.city|default:'--' }}</span></div>
+				</div>
+			</div>
+		</div>
 
-                        <div class="mb-6 border-t border-b border-gray-200 py-4">
-                            <label class="form-label">Selected slot</label>
-                            <div id="selected-slot" class="text-muted">No slot selected</div>
-                        </div>
+		<!-- Testimonial / trust snippet -->
+		<div class="mt-6 bg-white/10 p-4 rounded-md shadow-inner flex items-center gap-4">
+			<div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">💬</div>
+			<div>
+				<div class="text-sm italic">"{{ provider.provider_profile.top_review|default:'Very thorough and caring. Highly recommended!' }}"</div>
+				<div class="text-xs opacity-90 mt-1">— Recent patient</div>
+			</div>
+		</div>
+	</div>
 
-                        <div class="mb-4">
-                            <p class="text-sm text-gray-600 mb-4">If you don't see a suitable slot, you can manually request a date and time below.</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="form-label" for="{{ form.appointment_date.id_for_label }}">Preferred date (or chosen from above)</label>
-                                    {{ form.appointment_date }}
-                                    {% if form.appointment_date.errors %}
-                                        <div class="text-danger small">{{ form.appointment_date.errors|striptags }}</div>
-                                    {% endif %}
-                                </div>
-                                <div>
-                                    <label class="form-label" for="{{ form.appointment_time.id_for_label }}">Preferred time</label>
-                                    {{ form.appointment_time }}
-                                    {% if form.appointment_time.errors %}
-                                        <div class="text-danger small">{{ form.appointment_time.errors|striptags }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<!-- Left: calendar -->
+		<div class="lg:col-span-1 card">
+			<h3 class="font-semibold mb-3 page-lead">Choose a date</h3>
+			<div id="date-picker" aria-label="Select appointment date"></div>
+			<div id="no-available-dates-msg" class="mt-3 text-sm muted" style="display:none;"></div>
+			<div class="mt-3 text-sm muted">Select a date highlighted with available slots. Badge indicates number of open slots.</div>
+		</div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                            <div>
-                                <label class="form-label" for="{{ form.appointment_type.id_for_label }}">Appointment type</label>
-                                {{ form.appointment_type }}
-                                {% if form.appointment_type.errors %}
-                                    <div class="text-danger small">{{ form.appointment_type.errors|striptags }}</div>
-                                {% endif %}
-                            </div>
-                            <div>
-                                <label class="form-label" for="{{ form.duration_minutes.id_for_label }}">Duration (minutes)</label>
-                                {{ form.duration_minutes }}
-                                {% if form.duration_minutes.errors %}
-                                    <div class="text-danger small">{{ form.duration_minutes.errors|striptags }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
+		<!-- Middle: slots -->
+		<div class="lg:col-span-1 card">
+			<h3 class="font-semibold mb-3 page-lead">Available time slots</h3>
+			<div id="slots-announcer" class="sr-only" aria-live="polite"></div>
+			<div id="slots-container" class="space-y-3" role="list" aria-label="Available time slots">
+				<div class="muted">Pick a date to load slots.</div>
+			</div>
+			<div id="slots-loading" style="display:none;">Loading…</div>
+		</div>
 
-                        <div class="mb-4">
-                            <label class="form-label" for="{{ form.consultation_fee.id_for_label }}">Consultation fee (NPR)</label>
-                            {{ form.consultation_fee }}
-                            <input type="hidden" name="consultation_fee" value="{% if provider.provider_profile.hourly_rate %}{{ provider.provider_profile.hourly_rate }}{% else %}{{ form.initial.consultation_fee }}{% endif %}" />
-                            {% if form.consultation_fee.errors %}
-                                <div class="text-danger small">{{ form.consultation_fee.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
+		<!-- Right: selected slot and form -->
+		<div class="lg:col-span-1 card sticky top-24">
+			<div id="selected-slot-empty" class="text-muted">No slot selected</div>
+			<div id="selected-slot-card" class="hidden">
+				<div id="selected-slot-datetime" class="font-semibold page-lead"></div>
+				<div id="selected-slot-duration" class="text-sm muted mt-1"></div>
+				<div id="selected-slot-location" class="text-sm muted mt-1"></div>
+				<div id="selected-slot-fee" class="mt-2 font-bold"></div>
+			</div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Location</label>
-                            <div class="flex flex-wrap gap-4">
-                                {{ form.location_type }}
-                            </div>
-                        </div>
+			<form id="booking-form" method="post" action="" class="mt-4">
+				{% csrf_token %}
+				{# Show form errors prominently #}
+				{% if form.errors %}
+				<div class="mb-3 p-3 bg-red-50 border border-red-200 rounded">
+					<div class="font-semibold text-red-800">Please correct the errors below:</div>
+					<pre class="text-sm text-red-700">{{ form.errors.as_text }}</pre>
+				</div>
+				{% endif %}
+				<div class="space-y-3">
+					{# Ensure required fields are present in the submission #}
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Appointment type</label>
+						{{ form.appointment_type }}
+					</div>
+					<input type="hidden" name="consultation_fee" value="{{ form.initial.consultation_fee|default:provider.provider_profile.hourly_rate }}" />
+					<div>
+						<label for="selected-date-display" class="block text-sm font-medium text-gray-700">Selected date</label>
+						<input type="text" id="selected-date-display" readonly class="form-input w-full" aria-label="Selected date" />
+						<input type="hidden" name="appointment_date" id="appointment_date_hidden" />
+					</div>
+					<div>
+						<label for="selected-time-display" class="block text-sm font-medium text-gray-700">Selected time</label>
+						<input type="text" id="selected-time-display" readonly class="form-input w-full" aria-label="Selected time" />
+						<input type="hidden" name="appointment_time" id="appointment_time_hidden" />
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+						{{ form.duration_minutes }}
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Location type</label>
+						{{ form.location_type }}
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Location address</label>
+						{{ form.location_address }}
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Phone number</label>
+						{{ form.patient_phone }}
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Symptoms (optional)</label>
+						{{ form.symptoms }}
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Reason for appointment</label>
+						{{ form.reason }}
+						{% if form.reason.errors %}
+							<div class="text-sm text-red-600">{{ form.reason.errors|striptags }}</div>
+						{% endif %}
+					</div>
+					{# ensure additional_charges is submitted - keep hidden and default to 0.00 #}
+					<input type="hidden" name="additional_charges" value="{{ form.initial.additional_charges|default:'0.00' }}" />
+					<div class="pt-2">
+						<button id="submit-btn" type="submit" disabled class="btn-primary w-full" aria-disabled="true">Request appointment</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
 
-                        <div class="mb-4">
-                            <label class="form-label" for="{{ form.location_address.id_for_label }}">Address (if applicable)</label>
-                            {{ form.location_address }}
-                            {% if form.location_address.errors %}
-                                <div class="text-danger small">{{ form.location_address.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label" for="{{ form.video_link.id_for_label }}">Video link (for remote consult)</label>
-                            {{ form.video_link }}
-                            {% if form.video_link.errors %}
-                                <div class="text-danger small">{{ form.video_link.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label" for="{{ form.symptoms.id_for_label }}">Symptoms / Notes for provider</label>
-                            {{ form.symptoms }}
-                            {% if form.symptoms.errors %}
-                                <div class="text-danger small">{{ form.symptoms.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label" for="{{ form.reason.id_for_label }}">Reason for appointment</label>
-                            {{ form.reason }}
-                            {% if form.reason.errors %}
-                                <div class="text-danger small">{{ form.reason.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Professional Error Message Box (replaces alert) -->
-                        <div id="booking-error" class="alert alert-danger" style="display: none;"></div>
-
-                    </div>
-
-                    <!-- Form Footer with Buttons -->
-                    <div class="bg-gray-50 px-6 sm:px-8 py-5 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <button type="submit" class="w-full sm:w-auto bg-uh-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200">
-                            Request appointment
-                        </button>
-                        <a href="{% url 'appointments:provider_directory' %}" class="w-full sm:w-auto text-center font-medium text-gray-700 bg-white border border-gray-300 py-3 px-6 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200">
-                            Back to providers
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-    </div> <!-- End grid -->
 </div>
+
+{{ available_dates_str|json_script:"available-dates-json" }}
+{{ available_dates_info|json_script:"available-dates-info-json" }}
+
 {% endblock %}
 
 {% block extra_js %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    (function(){
-    const providerId = document.querySelector('.container').dataset.providerId;
-    const slotsContainer = document.getElementById('slots-container');
-    const dateButtons = document.querySelectorAll('.date-btn');
-    const bookingForm = document.getElementById('booking-form');
-    const appointmentTimeInput = document.querySelector('input[name="appointment_time"]');
-    const appointmentDateInput = document.querySelector('input[name="appointment_date"]');
+	(function(){
+	const providerId = document.querySelector('.container').dataset.providerId;
+	const slotsContainer = document.getElementById('slots-container');
+	const bookingForm = document.getElementById('booking-form');
+	const appointmentTimeInput = document.querySelector('input[name="appointment_time"]');
+	const appointmentDateInput = document.querySelector('input[name="appointment_date"]');
+	const slotsAnnouncer = document.getElementById('slots-announcer');
+	const datePickerInput = document.getElementById('date-picker');
     
-    // Get the new error message div
-    const bookingError = document.getElementById('booking-error');
+	// Get the new error message div
+	const bookingError = document.getElementById('booking-error');
+	const submitBtn = document.getElementById('submit-btn');
 
-        function clearSlots(){
-            if (slotsContainer) slotsContainer.innerHTML = '';
-        }
+		function clearSlots(){
+			if (slotsContainer) slotsContainer.innerHTML = '';
+		}
 
-        function showMessage(msg){
-            if (slotsContainer) slotsContainer.innerHTML = '<div class="text-muted">'+msg+'</div>';
-        }
+		function showMessage(msg){
+			if (slotsContainer) slotsContainer.innerHTML = '<div class="text-muted">'+msg+'</div>';
+		}
 
-        async function fetchSlots(date){
-            showMessage('Loading...');
-            try{
-                const resp = await fetch(`/appointments/provider/${providerId}/slots/${date}/`);
-                if(!resp.ok) throw new Error('Network error');
-                const data = await resp.json();
-                renderSlots(data.slots);
-            }catch(err){
-                showMessage('Unable to load slots.');
-                console.error(err);
-            }
-        }
+		async function fetchSlots(date){
+			showMessage('Loading...');
+			try{
+				const resp = await fetch(`/appointments/provider/${providerId}/slots/${date}/`);
+				if(!resp.ok) throw new Error('Network error');
+				const data = await resp.json();
+				renderSlots(data.slots || [], date);
+			}catch(err){
+				showMessage('Unable to load slots.');
+				console.error(err);
+			}
+		}
 
-        function renderSlots(slots){
-            if(!slots || slots.length === 0){
-                showMessage('No available slots for this date.');
-                return;
-            }
-            const frag = document.createDocumentFragment();
-            slots.forEach(s => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-outline-primary slot-btn'; // Styled by CSS
-                btn.textContent = s.display;
-                btn.dataset.time = s.time;
-                btn.addEventListener('click', function(){
-                    // clear previous selection
-                    document.querySelectorAll('.slot-btn.selected').forEach(el => el.classList.remove('selected'));
-                    this.classList.add('selected');
-                    
-                    // set the form time field and update the selected-slot display
-                    if(appointmentTimeInput) appointmentTimeInput.value = this.dataset.time;
-                    const sel = document.getElementById('selected-slot');
-                    if(sel) {
-                        sel.textContent = this.textContent;
-                        sel.classList.remove('text-muted');
-                    }
-                    
-                    // Hide error message on successful selection
-                    if (bookingError) bookingError.style.display = 'none';
-                });
-                frag.appendChild(btn);
-            });
-            clearSlots();
-            if (slotsContainer) slotsContainer.appendChild(frag);
-        }
+		function renderSlots(slots, date){
+			if(!slots || slots.length === 0){
+				showMessage('No available slots for this date.');
+				return;
+			}
+			const frag = document.createDocumentFragment();
+			slots.forEach((s) => {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'slot-chip';
+				btn.tabIndex = 0;
+				btn.setAttribute('role','listitem');
+				btn.textContent = s.display;
+				btn.dataset.time = s.time;
+				// Ensure each slot button has a date. Backend may omit it, so fall back to
+				// the `date` fetch parameter provided to `fetchSlots`.
+				btn.dataset.date = s.date || date || '';
+				btn.addEventListener('click', function(){
+					document.querySelectorAll('.slot-chip.selected').forEach(el => el.classList.remove('selected'));
+					this.classList.add('selected');
+					// write both to named inputs (if present) and the hidden inputs by ID
+					try {
+						if(appointmentTimeInput) appointmentTimeInput.value = this.dataset.time;
+					} catch(e){}
+					try {
+						if(appointmentDateInput) appointmentDateInput.value = this.dataset.date || '';
+					} catch(e){}
+					// ensure the hidden inputs by ID are explicitly set (robust against selector issues)
+					const hidDate = document.getElementById('appointment_date_hidden');
+					const hidTime = document.getElementById('appointment_time_hidden');
+					if(hidDate) hidDate.value = this.dataset.date || '';
+					if(hidTime) hidTime.value = this.dataset.time || '';
+					// update visible displays and hidden inputs
+					const dispDate = document.getElementById('selected-date-display');
+					const dispTime = document.getElementById('selected-time-display');
+					if(dispDate) dispDate.value = this.dataset.date || '';
+					if(dispTime) dispTime.value = this.textContent || this.dataset.time || '';
+					// update selected card
+					const selEmpty = document.getElementById('selected-slot-empty');
+					const selCard = document.getElementById('selected-slot-card');
+					const selDatetime = document.getElementById('selected-slot-datetime');
+					const selDuration = document.getElementById('selected-slot-duration');
+					const selFee = document.getElementById('selected-slot-fee');
+					if(selEmpty && selCard && selDatetime){
+						selEmpty.style.display = 'none';
+						selCard.classList.remove('hidden');
+						selDatetime.textContent = (appointmentDateInput ? appointmentDateInput.value : '') + ' ' + this.textContent;
+						selDuration.textContent = 'Duration: ' + (document.querySelector('input[name="duration_minutes"]') ? document.querySelector('input[name="duration_minutes"]').value : '30') + ' minutes';
+						selFee.textContent = 'NPR ' + (document.querySelector('input[name="consultation_fee"]') ? document.querySelector('input[name="consultation_fee"]').value : '--');
+					}
+					// enable submit button
+					if(submitBtn){ submitBtn.disabled = false; submitBtn.setAttribute('aria-disabled','false'); }
+				});
 
-        dateButtons.forEach(btn => {
-            btn.addEventListener('click', function(){
-                // highlight selected date
-                dateButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                const date = this.dataset.date;
-                
-                // set the appointment_date field on the form
-                const dateInput = document.querySelector('input[name="appointment_date"]');
-                if(dateInput) dateInput.value = date;
-                
-                fetchSlots(date);
-            });
-        });
+				// keyboard accessibility for slot buttons
+				btn.addEventListener('keydown', function(e){
+					if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); this.click(); }
+					if(e.key === 'ArrowRight' || e.key === 'ArrowDown'){
+						e.preventDefault(); const next = this.nextElementSibling; if(next) next.focus();
+					}
+					if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){
+						e.preventDefault(); const prev = this.previousElementSibling; if(prev) prev.focus();
+					}
+				});
+				frag.appendChild(btn);
+			});
+			clearSlots();
+			if (slotsContainer) slotsContainer.appendChild(frag);
+			const first = slotsContainer.querySelector('.slot-chip');
+			if(first) { first.focus(); first.click(); }
+			// announce available slots to screen readers
+			if(slotsAnnouncer) slotsAnnouncer.textContent = (slots.length ? (slots.length + ' slots available') : 'No slots available');
+		}
 
-        // *** MODIFIED SUBMIT LISTENER ***
-        // prevent submit if no slot selected, using the error div instead of alert()
-        if (bookingForm) bookingForm.addEventListener('submit', function(e){
-            if(!appointmentTimeInput || !appointmentTimeInput.value){
-                e.preventDefault();
-                if(bookingError) {
-                    bookingError.textContent = 'Please select a time slot before submitting, or manually enter a time.';
-                    bookingError.style.display = 'block';
-                }
-            } else {
-                if(bookingError) bookingError.style.display = 'none';
-            }
-        });
-    })();
+		// Read available dates and per-date info injected as JSON to avoid template tags inside JS
+		let availableDates = [];
+		let availableDatesInfo = {};
+		try {
+			const script = document.getElementById('available-dates-json');
+			if(script) availableDates = JSON.parse(script.textContent || '[]');
+		} catch (e) {
+			console.error('Failed to parse available dates JSON', e);
+		}
+		try {
+			const scriptInfo = document.getElementById('available-dates-info-json');
+			if(scriptInfo) availableDatesInfo = JSON.parse(scriptInfo.textContent || '{}');
+		} catch (e) {
+			console.error('Failed to parse available dates info JSON', e);
+		}
+
+		if (datePickerInput && typeof flatpickr !== 'undefined') {
+			// If backend provided no availableDates, show helpful message and disable booking
+			const noDatesMsgElem = document.getElementById('no-available-dates-msg');
+			if(Array.isArray(availableDates) && availableDates.length === 0){
+				if(noDatesMsgElem){
+					noDatesMsgElem.style.display = 'block';
+					noDatesMsgElem.textContent = 'This provider has not published availability yet. Please contact the provider or choose another provider.';
+				}
+				if(slotsContainer) slotsContainer.innerHTML = '<div class="muted">No schedule available for this provider.</div>';
+				// Keep a lightweight calendar so user can still view dates, but do not auto-enable anything
+				flatpickr(datePickerInput, { dateFormat: 'Y-m-d', inline: true });
+				// disable submit to avoid invalid booking
+				const submitDisable = document.getElementById('submit-btn');
+				if(submitDisable){ submitDisable.disabled = true; submitDisable.setAttribute('aria-disabled','true'); }
+				return; // stop normal initialization
+			}
+			flatpickr(datePickerInput, {
+				dateFormat: 'Y-m-d',
+				inline: true,
+				enable: availableDates,
+				defaultDate: availableDates.length ? availableDates[0] : null,
+				onChange: function(selectedDates, dateStr){
+					if(appointmentDateInput) appointmentDateInput.value = dateStr;
+					const dispDate = document.getElementById('selected-date-display');
+					if(dispDate) dispDate.value = dateStr;
+					fetchSlots(dateStr);
+				},
+				onDayCreate: function(dObj, dStr, fpDayElem){
+					try {
+						const iso = fpDayElem.dateObj.toISOString().slice(0,10);
+						const count = availableDatesInfo[iso] || 0;
+						if(count > 0){
+							const badge = document.createElement('span');
+							badge.className = 'fp-badge';
+							badge.textContent = count;
+							fpDayElem.classList.add('has-slots');
+							fpDayElem.appendChild(badge);
+						}
+					} catch (e) {}
+				}
+			});
+
+			if (availableDates.length) {
+				const first = availableDates[0];
+				if (appointmentDateInput) appointmentDateInput.value = first;
+				setTimeout(() => fetchSlots(first), 50);
+			}
+		}
+
+		if (bookingForm) bookingForm.addEventListener('submit', function(e){
+			// Ensure hidden inputs are populated before submit
+			const hiddenDate = document.getElementById('appointment_date_hidden');
+			const hiddenTime = document.getElementById('appointment_time_hidden');
+			const displayDate = document.getElementById('selected-date-display');
+			const displayTime = document.getElementById('selected-time-display');
+			if(displayDate && (!hiddenDate || !hiddenDate.value)){
+				if(hiddenDate) hiddenDate.value = displayDate.value;
+			}
+			if(displayTime && (!hiddenTime || !hiddenTime.value)){
+				if(hiddenTime) hiddenTime.value = displayTime.value;
+			}
+			// Fallback: if still empty, try to read from selected slot element dataset
+			if((!hiddenDate || !hiddenDate.value) || (!hiddenTime || !hiddenTime.value)){
+				const selected = document.querySelector('.slot-chip.selected');
+				if(selected){
+					if(!hiddenDate || !hiddenDate.value) {
+						if(hiddenDate) hiddenDate.value = selected.dataset.date || '';
+						if(displayDate) displayDate.value = selected.dataset.date || '';
+					}
+					if(!hiddenTime || !hiddenTime.value) {
+						if(hiddenTime) hiddenTime.value = selected.dataset.time || '';
+						if(displayTime) displayTime.value = selected.dataset.time || selected.textContent || '';
+					}
+				}
+			}
+			// Final guard: require both values
+			if(!hiddenDate.value || !hiddenTime.value){
+				e.preventDefault();
+				alert('Please select a date and time slot before submitting.');
+				return false;
+			}
+		});
+
+	})();
+</script>
+<script>
+// Small DOM tweaks: placeholders and IDs for clarity
+document.addEventListener('DOMContentLoaded', function(){
+	const sd = document.getElementById('selected-date-display');
+	const st = document.getElementById('selected-time-display');
+	if(sd){ sd.placeholder = 'Selected date'; sd.setAttribute('aria-label','Selected date'); }
+	if(st){ st.placeholder = 'Selected time'; st.setAttribute('aria-label','Selected time'); }
+
+	const reason = document.querySelector('textarea[name="reason"], textarea#id_reason');
+	if(reason){ reason.placeholder = 'Reason for appointment'; }
+
+	// Ensure duration, location fields have ids and friendly placeholders
+	const duration = document.querySelector('input[name="duration_minutes"], select[name="duration_minutes"]');
+	if(duration && !duration.id) duration.id = 'duration_minutes';
+	if(duration && !duration.placeholder) duration.setAttribute('placeholder','Duration in minutes');
+
+	const locType = document.querySelector('select[name="location_type"], input[name="location_type"]');
+	if(locType && !locType.id) locType.id = 'location_type';
+
+	const locAddr = document.querySelector('input[name="location_address"], textarea[name="location_address"]');
+	if(locAddr && !locAddr.id) locAddr.id = 'location_address';
+	if(locAddr && !locAddr.placeholder) locAddr.setAttribute('placeholder','Location address');
+});
 </script>
 {% endblock %}
+

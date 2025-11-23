@@ -1,22 +1,12 @@
 {% load static %}
 
-{% block title %}Pending Appointments - Provider - UH Care{% endblock %}
-
-{% block content %}
-<!-- 
-  This is a full HTML file for demonstration.
-  In your Django project, you will only need to copy the 
-  <style> block into your base.html <head> (if not already there)
-  and the contents of <div id="page-content">...</div> 
-  to replace your original HTML block.
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Use the title from your block -->
-    <title>Pending Appointments - Provider - UH Care</title>
+    <title>Pending Service Requests - Provider - UH Care</title>
     
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -96,8 +86,8 @@
             
             <!-- Page Header -->
             <div class="mb-8">
-                <h1 class="text-3xl font-bold text-uh-blue-700">Pending Appointments</h1>
-                <p class="text-lg text-gray-600 mt-2">Review and respond to new appointment requests.</p>
+                <h1 class="text-3xl font-bold text-uh-blue-700">Pending Service Requests</h1>
+                <p class="text-lg text-gray-600 mt-2">Review and respond to new service booking requests.</p>
             </div>
         
             {% if appointments %}
@@ -151,12 +141,12 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-400 mx-auto mb-4">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.12-1.58H6.88a2.25 2.25 0 00-2.12 1.58L2.35 13.177a2.25 2.25 0 00-.1.661z" />
                     </svg>
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-2">No pending appointments</h3>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-2">No pending service requests</h3>
                     <p class="text-gray-600">You are all caught up!</p>
                 </div>
             {% endif %}
         </div>
-        <!-- End of your original {% block content %} -->
+        <!-- End of dashboard content -->
 
     </div> <!-- End #page-content -->
 

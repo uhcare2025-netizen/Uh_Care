@@ -4,7 +4,7 @@ from django.utils import timezone
 from decimal import Decimal
 
 from apps.accounts.models import User, PatientProfile, ProviderProfile
-from apps.appointments.models import Appointment
+from apps.appointments.models import ServiceBooking
 from apps.payments.models import Payment
 from apps.services.models import Service, ServiceCategory
 
@@ -35,8 +35,8 @@ class DashboardViewsTestCase(TestCase):
             what_included='Care',
         )
 
-        # Appointment for provider and patient
-        self.appointment = Appointment.objects.create(
+        # Marketplace ServiceBooking for provider and patient
+        self.service_booking = ServiceBooking.objects.create(
             patient=self.patient,
             provider=self.provider,
             service=self.service,
@@ -50,9 +50,9 @@ class DashboardViewsTestCase(TestCase):
             service_address='Patient home address'
         )
 
-        # Payment record
+        # Payment record linked to the new service_booking
         Payment.objects.create(
-            appointment=self.appointment,
+            service_booking=self.service_booking,
             patient=self.patient,
             amount=Decimal('1200.00'),
             payment_status='paid'

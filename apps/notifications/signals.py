@@ -1,86 +1,79 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from apps.appointments.models import Appointment
+from apps.appointments.models import ServiceBooking
 from apps.pharmacy.models import PharmacyOrder
 from apps.equipment.models import EquipmentRental, EquipmentPurchase
 from apps.payments.models import Payment
 from .services import NotificationService
 
 
-@receiver(post_save, sender=Appointment)
-def appointment_notification(sender, instance, created, **kwargs):
+@receiver(post_save, sender=ServiceBooking)
+def servicebooking_notification(sender, instance, created, **kwargs):
     """
-    Send notifications for appointment events
+    Send notifications for service booking events (new ServiceBooking model)
     """
     if created:
-        # Notify patient
         NotificationService.send_notification(
             user=instance.patient,
             notification_type='appointment_booked',
-            title='Appointment Booked Successfully',
-            message=f'Your appointment for {instance.service.name} has been booked for {instance.appointment_date}.',
+            title='Service Booked Successfully',
+            message=f'Your service booking for {instance.service.name} has been booked for {instance.appointment_date}.',
             related_object=instance,
             action_url=f'/appointments/detail/{instance.id}/',
             send_email=True,
             send_sms=True
         )
     else:
-        # Check status changes
         if instance.status == 'confirmed' and instance.provider:
-            # Notify patient about confirmation
             NotificationService.send_notification(
                 user=instance.patient,
                 notification_type='appointment_confirmed',
-                title='Appointment Confirmed',
-                message=f'Your appointment has been confirmed. Provider: {instance.provider.get_full_name()}',
+                title='Service Booking Confirmed',
+                message=f'Your service booking has been confirmed. Provider: {instance.provider.get_full_name()}',
                 related_object=instance,
                 action_url=f'/appointments/detail/{instance.id}/',
                 send_email=True,
                 send_sms=True
             )
-            
-            # Notify provider
+
             NotificationService.send_notification(
                 user=instance.provider,
                 notification_type='appointment_confirmed',
-                title='New Appointment Assigned',
-                message=f'New appointment assigned: {instance.service.name} on {instance.appointment_date}',
+                title='New Service Booking Assigned',
+                message=f'New service booking assigned: {instance.service.name} on {instance.appointment_date}',
                 related_object=instance,
                 action_url=f'/appointments/detail/{instance.id}/',
                 send_email=True
             )
-        
+
         elif instance.status == 'cancelled':
-            # Notify both parties
             NotificationService.send_notification(
                 user=instance.patient,
                 notification_type='appointment_cancelled',
-                title='Appointment Cancelled',
-                message=f'Your appointment for {instance.service.name} has been cancelled.',
+                title='Service Booking Cancelled',
+                message=f'Your service booking for {instance.service.name} has been cancelled.',
                 related_object=instance,
                 action_url=f'/appointments/detail/{instance.id}/',
                 send_email=True,
                 send_sms=True
             )
-            
             if instance.provider:
                 NotificationService.send_notification(
                     user=instance.provider,
                     notification_type='appointment_cancelled',
-                    title='Appointment Cancelled',
-                    message=f'Appointment cancelled: {instance.service.name}',
+                    title='Service Booking Cancelled',
+                    message=f'Service booking cancelled: {instance.service.name}',
                     related_object=instance,
                     action_url=f'/appointments/detail/{instance.id}/'
                 )
-        
+
         elif instance.status == 'completed':
-            # Notify patient
             NotificationService.send_notification(
                 user=instance.patient,
                 notification_type='appointment_completed',
-                title='Appointment Completed',
-                message=f'Your appointment for {instance.service.name} has been completed. Thank you!',
+                title='Service Completed',
+                message=f'Your service booking for {instance.service.name} has been completed. Thank you!',
                 related_object=instance,
                 action_url=f'/appointments/detail/{instance.id}/',
                 send_email=True

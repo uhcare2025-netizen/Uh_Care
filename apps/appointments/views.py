@@ -10,7 +10,8 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from datetime import datetime, timedelta
 
-from .models import Appointment
+from .models import ServiceBooking
+from django.db.models import Q
 from apps.services.models import Service
 from apps.payments.models import Payment
 from .forms import AppointmentBookingForm
@@ -32,7 +33,7 @@ def book_appointment(request, service_id):
     # for this same service in the future, block creating another one from this
     # booking page and direct them to their appointments page or the existing
     # confirmation. This enforces that a booking is 'permanent' unless cancelled.
-    existing_user_appt = Appointment.objects.filter(
+    existing_user_appt = ServiceBooking.objects.filter(
         patient=request.user,
         service=service,
         status__in=['pending', 'confirmed', 'in_progress']
@@ -70,12 +71,9 @@ def book_appointment(request, service_id):
                     
                     appointment.save()
                     
-                    # Create payment record. Do NOT allow selecting payment method
-                    # at booking time; it's chosen later on the payments detail page.
-                    # Create payment record without pre-selecting method; the
-                    # patient chooses method on the payment detail page.
+                    # Create payment record and link to ServiceBooking via service_booking FK.
                     Payment.objects.create(
-                        appointment=appointment,
+                        service_booking=appointment,
                         patient=request.user,
                         amount=appointment.total_amount,
                         payment_status='unpaid'
@@ -119,13 +117,13 @@ def appointment_confirmation(request, appointment_id):
     Show appointment confirmation page
     """
     appointment = get_object_or_404(
-        Appointment.objects.select_related('service', 'patient'),
+        ServiceBooking.objects.select_related('service', 'patient'),
         id=appointment_id,
         patient=request.user
     )
     
-    # Get payment info
-    payment = Payment.objects.filter(appointment=appointment).first()
+    # Get payment info (appointment is a ServiceBooking, so only check service_booking FK)
+    payment = Payment.objects.filter(service_booking=appointment).first()
     # Compute a simple boolean for template logic to avoid complex template
     # expressions (Django template 'if' has limited parsing for parentheses).
     payment_pending_or_unpaid = False
@@ -147,12 +145,12 @@ def my_appointments(request):
     View all user appointments (patient or provider)
     """
     if request.user.role == 'patient':
-        appointments = Appointment.objects.filter(
+        appointments = ServiceBooking.objects.filter(
             patient=request.user
         ).select_related('service', 'provider').order_by('-appointment_date', '-appointment_time')
         
     elif request.user.role == 'provider':
-        appointments = Appointment.objects.filter(
+        appointments = ServiceBooking.objects.filter(
             provider=request.user
         ).select_related('service', 'patient').order_by('-appointment_date', '-appointment_time')
         
@@ -181,21 +179,21 @@ def appointment_detail(request, appointment_id):
     # Get appointment based on user role
     if request.user.role == 'patient':
         appointment = get_object_or_404(
-            Appointment.objects.select_related('service', 'provider'),
+            ServiceBooking.objects.select_related('service', 'provider'),
             id=appointment_id,
             patient=request.user
         )
     elif request.user.role == 'provider':
         appointment = get_object_or_404(
-            Appointment.objects.select_related('service', 'patient'),
-            id=appointment_id,
+            ServiceBooking.objects.select_related('service', 'patient'),
+            pk=appointment_id,
             provider=request.user
         )
     else:
         raise PermissionDenied("You don't have permission to view this appointment.")
     
-    # Get payment info
-    payment = Payment.objects.filter(appointment=appointment).first()
+    # Get payment info (appointment is a ServiceBooking, so only check service_booking FK)
+    payment = Payment.objects.filter(service_booking=appointment).first()
     
     context = {
         'appointment': appointment,
@@ -214,13 +212,13 @@ def cancel_appointment(request, appointment_id):
         raise PermissionDenied("Only patients can cancel appointments.")
     
     appointment = get_object_or_404(
-        Appointment,
+        ServiceBooking,
         id=appointment_id,
         patient=request.user
     )
     
-    # Check if appointment can be cancelled
-    if appointment.status in ['completed', 'cancelled']:
+    # Only allow cancellation when status is 'pending'
+    if appointment.status != 'pending':
         messages.error(request, 'This appointment cannot be cancelled.')
         return redirect('appointments:detail', appointment_id=appointment.id)
     
@@ -253,24 +251,28 @@ def cancel_appointment(request, appointment_id):
         )
     
     if request.method == 'POST':
-        cancellation_reason = request.POST.get('cancellation_reason', '')
-        
+        cancellation_reason = request.POST.get('cancellation_reason', '') or request.POST.get('reason', '')
+        # Server-side validation: require a non-empty cancellation reason
+        if not cancellation_reason or not cancellation_reason.strip():
+            messages.error(request, 'Please provide a reason for cancellation.')
+            return redirect('appointments:my_appointments')
+
         with transaction.atomic():
             appointment.status = 'cancelled'
             appointment.cancellation_reason = cancellation_reason
             appointment.save()
-            
+
             # Update patient balance (remove charge if cancelled in time)
             if hours_until_appointment >= 24:
                 patient_profile = request.user.patient_profile
                 patient_profile.total_balance -= appointment.total_amount
                 patient_profile.save()
-                
-                # Update payment status
-                Payment.objects.filter(appointment=appointment).update(
+
+                # Update payment status (appointment is a ServiceBooking, so only update service_booking FK)
+                Payment.objects.filter(service_booking=appointment).update(
                     payment_status='refunded'
                 )
-        
+
         messages.success(request, 'Appointment cancelled successfully.')
         return redirect('appointments:my_appointments')
     
@@ -295,11 +297,11 @@ def provider_pending_appointments(request):
         raise PermissionDenied("Only providers can access this page.")
     
     # Get pending appointments (unassigned or assigned to this provider)
-    pending_appointments = Appointment.objects.filter(
+    pending_appointments = ServiceBooking.objects.filter(
         status='pending'
     ).filter(
         provider__isnull=True  # Unassigned
-    ) | Appointment.objects.filter(
+    ) | ServiceBooking.objects.filter(
         status='pending',
         provider=request.user  # Assigned to this provider
     )
@@ -324,7 +326,7 @@ def accept_appointment(request, appointment_id):
         raise PermissionDenied("Only providers can accept appointments.")
     
     appointment = get_object_or_404(
-        Appointment,
+        ServiceBooking,
         id=appointment_id,
         status='pending'
     )
@@ -354,7 +356,7 @@ def reject_appointment(request, appointment_id):
         raise PermissionDenied("Only providers can reject appointments.")
     
     appointment = get_object_or_404(
-        Appointment,
+        ServiceBooking,
         id=appointment_id,
         status='pending'
     )
@@ -387,7 +389,7 @@ def complete_appointment(request, appointment_id):
         raise PermissionDenied("Only providers can complete appointments.")
     
     appointment = get_object_or_404(
-        Appointment,
+        ServiceBooking,
         id=appointment_id,
         provider=request.user,
         status__in=['confirmed', 'in_progress']
@@ -395,17 +397,17 @@ def complete_appointment(request, appointment_id):
     
     if request.method == 'POST':
         provider_notes = request.POST.get('provider_notes', '')
-        
+
         with transaction.atomic():
             appointment.status = 'completed'
             appointment.provider_notes = provider_notes
             appointment.completed_at = timezone.now()
             appointment.save()
-            
+
             # Update service total bookings
             appointment.service.total_bookings += 1
             appointment.service.save()
-        
+
         messages.success(request, 'Appointment marked as completed!')
         return redirect('appointments:my_appointments')
     

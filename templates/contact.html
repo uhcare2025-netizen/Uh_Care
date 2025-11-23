@@ -1,139 +1,225 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static %}
 
-{% block title %}Patient Dashboard - UH Care{% endblock %}
+{% block title %}Contact Us - UH Care{% endblock %}
 
 {% block extra_css %}
-<!-- Small dashboard adjustments, use project's Tailwind config where available -->
 <style>
-    /* Make summary numbers stand out in cards */
-    .uh-dashboard-number { font-size: 1.5rem; font-weight: 700; }
+    .contact-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .contact-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+    
+    .contact-section video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: 0;
+        object-fit: cover;
+    }
+    
+    .contact-section-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .contact-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .contact-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8 gap-6">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-uh-blue-700">Hello, {{ user.first_name|default:user.username|default:'Patient' }}</h1>
-            <p class="text-sm text-gray-600">Welcome to your UH Care dashboard — a quick overview of your recent activity and quick actions.</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{% url 'appointments:provider_directory' %}" class="inline-flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm hover:shadow">Find Provider</a>
-            <a href="{% url 'appointments:my_appointments' %}" class="inline-flex items-center gap-2 bg-uh-blue-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-uh-blue-600">My Appointments</a>
-        </div>
-    </div>
-
-    <!-- Summary cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Upcoming Appointments -->
-        <div class="bg-white border border-gray-100 rounded-lg p-5 shadow-sm">
-            <div class="flex items-start justify-between">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500">Upcoming</h3>
-                    <div class="uh-dashboard-number text-uh-blue-700">{{ upcoming_appointments_count|default:0 }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Next: {% if next_appointment %}{{ next_appointment.start_time|date:'M d, Y H:i' }} with {{ next_appointment.provider_name|default:'—' }}{% else %}No upcoming appointment{% endif %}</p>
-                </div>
-                <div class="text-gray-400">
-                    <!-- Icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 p-2 bg-uh-blue-100 rounded-full text-uh-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/></svg>
-                </div>
-            </div>
-            <a href="{% url 'appointments:my_appointments' %}" class="mt-4 block text-sm text-uh-blue-700 hover:underline">View appointments</a>
-        </div>
-
-        <!-- Outstanding Payments -->
-        <div class="bg-white border border-gray-100 rounded-lg p-5 shadow-sm">
-            <div class="flex items-start justify-between">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500">Outstanding</h3>
-                    <div class="uh-dashboard-number text-uh-red-600">रु {{ outstanding_payments_total|default:0|intcomma }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Unpaid invoices and pending payments</p>
-                </div>
-                <div class="text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 p-2 bg-uh-red-100 rounded-full text-uh-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3"/><path d="M21 12A9 9 0 1112 3v0" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-            </div>
-            <a href="{% url 'dashboard:home' %}" class="mt-4 block text-sm text-uh-blue-700 hover:underline">View invoices</a>
-        </div>
-
-        <!-- Prescriptions -->
-        <div class="bg-white border border-gray-100 rounded-lg p-5 shadow-sm">
-            <div class="flex items-start justify-between">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500">Prescriptions</h3>
-                    <div class="uh-dashboard-number text-uh-green-600">{{ prescriptions_count|default:0 }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Active & recent prescriptions</p>
-                </div>
-                <div class="text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 p-2 bg-uh-green-100 rounded-full text-uh-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 21h8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-            </div>
-            <a href="{% url 'pharmacy:list' %}" class="mt-4 block text-sm text-uh-blue-700 hover:underline">View prescription orders</a>
-        </div>
-
-        <!-- Messages -->
-        <div class="bg-white border border-gray-100 rounded-lg p-5 shadow-sm">
-            <div class="flex items-start justify-between">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500">Messages</h3>
-                    <div class="uh-dashboard-number text-gray-800">{{ unread_messages_count|default:0 }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Unread messages & notifications</p>
-                </div>
-                <div class="text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 p-2 bg-gray-100 rounded-full text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-            </div>
-            <a href="{% url 'notifications:list' %}" class="mt-4 block text-sm text-uh-blue-700 hover:underline">View messages</a>
+<div class="bg-white">
+    <!-- Hero Section with Background Video -->
+    <div class="contact-section py-16 px-4 sm:px-6 lg:px-8" style="height: 400px;">
+        <video autoplay muted loop playsinline>
+            <source src="{% static 'videos/Back-ground.mp4' %}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="contact-section-content max-w-4xl mx-auto text-center h-full flex flex-col justify-center">
+            <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">Contact Us</h1>
+            <p class="text-lg text-gray-100">We're here to help. Get in touch with UH Care for any inquiries or support.</p>
         </div>
     </div>
 
-    <!-- Main Content: Recent activity + Quick actions -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Activity (wide column) -->
-        <div class="lg:col-span-2 bg-white border border-gray-100 rounded-lg p-6 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Recent activity</h2>
-                <a href="#" class="text-sm text-uh-blue-700 hover:underline">See all</a>
+    <!-- Contact Information Cards -->
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Phone -->
+            <div class="contact-card bg-white rounded-lg border border-gray-100 p-8 shadow-sm">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-uh-blue-100 rounded-full p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-uh-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Phone</h3>
+                <p class="text-center text-gray-600 mb-2">Call us during business hours</p>
+                <a href="tel:+977-9816582615" class="block text-center text-uh-blue-700 font-semibold hover:underline">
+                    +977 9816582615
+                </a>
             </div>
 
-            {% if recent_activities %}
-                <ul class="divide-y divide-gray-100">
-                    {% for act in recent_activities %}
-                    <li class="py-3 flex justify-between items-start">
-                        <div>
-                            <p class="text-sm text-gray-700">{{ act.summary }}</p>
-                            <p class="text-xs text-gray-400">{{ act.timestamp|date:'M d, Y H:i' }}</p>
-                        </div>
-                        <div class="text-sm text-gray-500">{% if act.amount %}रु {{ act.amount|intcomma }}{% endif %}</div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="py-8 text-center text-gray-500">No recent activity — when you book services, pay invoices, or receive prescriptions they will appear here.</div>
-            {% endif %}
+            <!-- Email -->
+            <div class="contact-card bg-white rounded-lg border border-gray-100 p-8 shadow-sm">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-uh-blue-100 rounded-full p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-uh-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Email</h3>
+                <p class="text-center text-gray-600 mb-2">Send us an email anytime</p>
+                <a href="mailto:unitedcare.npl@gmail.com" class="block text-center text-uh-blue-700 font-semibold hover:underline break-all">
+                    unitedcare.npl@gmail.com
+                </a>
+            </div>
+
+            <!-- Address -->
+            <div class="contact-card bg-white rounded-lg border border-gray-100 p-8 shadow-sm">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-uh-blue-100 rounded-full p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-uh-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Address</h3>
+                <p class="text-center text-gray-600">
+                    Professional Home Healthcare Services<br/>
+                    Across Nepal
+                </p>
+            </div>
         </div>
 
-        <!-- Quick actions (sidebar) -->
-        <aside class="bg-white border border-gray-100 rounded-lg p-6 shadow-sm">
-            <h3 class="text-sm font-medium text-gray-700 mb-4">Quick actions</h3>
-            <div class="space-y-3">
-                <a href="{% url 'appointments:provider_directory' %}" class="block w-full text-left bg-uh-blue-700 text-white py-2 px-3 rounded-lg text-sm">Book an appointment</a>
-                <a href="{% url 'pharmacy:list' %}" class="block w-full text-left bg-white border border-gray-200 py-2 px-3 rounded-lg text-sm hover:shadow">Order medicine</a>
-                <a href="{% url 'equipment:list' %}" class="block w-full text-left bg-white border border-gray-200 py-2 px-3 rounded-lg text-sm hover:shadow">Manage equipment</a>
-                <a href="{% url 'accounts:profile' %}" class="block w-full text-left bg-white border border-gray-200 py-2 px-3 rounded-lg text-sm hover:shadow">Update profile</a>
-            </div>
-        </aside>
+        <!-- Contact Form -->
+        <div class="max-w-2xl mx-auto bg-white rounded-lg border border-gray-100 shadow-sm p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uh-blue-500 focus:border-transparent"
+                            placeholder="Your full name"
+                        />
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uh-blue-500 focus:border-transparent"
+                            placeholder="your.email@example.com"
+                        />
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uh-blue-500 focus:border-transparent"
+                        placeholder="+977 XXXXXXXXXX"
+                    />
+                </div>
+
+                <!-- Subject -->
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                    <input 
+                        type="text" 
+                        id="subject" 
+                        name="subject" 
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uh-blue-500 focus:border-transparent"
+                        placeholder="How can we help?"
+                    />
+                </div>
+
+                <!-- Message -->
+                <div>
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                    <textarea 
+                        id="message" 
+                        name="message" 
+                        rows="5" 
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uh-blue-500 focus:border-transparent"
+                        placeholder="Please share your message or inquiry..."
+                    ></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit"
+                    class="w-full bg-uh-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-uh-blue-600 transition-colors duration-200"
+                >
+                    Send Message
+                </button>
+            </form>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="max-w-2xl mx-auto mt-12 bg-uh-blue-50 rounded-lg border border-uh-blue-100 p-8">
+            <h3 class="text-lg font-semibold text-uh-blue-900 mb-3">Business Hours</h3>
+            <ul class="space-y-2 text-gray-700">
+                <li><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM (NPT)</li>
+                <li><strong>Saturday:</strong> 9:00 AM - 4:00 PM (NPT)</li>
+                <li><strong>Sunday:</strong> Closed</li>
+            </ul>
+            <p class="mt-4 text-sm text-gray-600">
+                We'll get back to you as soon as possible during our business hours. For urgent matters, please call us directly.
+            </p>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Lightweight client-side hooks for dashboard (expandable)
-    document.addEventListener('DOMContentLoaded', function(){
-        // Placeholder: more interactivity can be added (filters, ajax, charts)
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // You can add form validation or submission handling here
+        console.log('Contact form submitted');
     });
 </script>
 {% endblock %}

@@ -5,6 +5,7 @@ Payments Admin Configuration
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Payment
+from .models import UserPaymentMethod
 from django.contrib.admin import SimpleListFilter
 
 
@@ -22,9 +23,11 @@ class LinkedObjectFilter(SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        from django.db.models import Q
         val = self.value()
         if val == 'appointment':
-            return queryset.filter(appointment__isnull=False)
+            # Include both legacy appointment and new service_booking
+            return queryset.filter(Q(appointment__isnull=False) | Q(service_booking__isnull=False))
         if val == 'pharmacy':
             return queryset.filter(pharmacy_order__isnull=False)
         if val == 'purchase':
@@ -32,7 +35,7 @@ class LinkedObjectFilter(SimpleListFilter):
         if val == 'rental':
             return queryset.filter(equipment_rental__isnull=False)
         if val == 'unlinked':
-            return queryset.filter(appointment__isnull=True, pharmacy_order__isnull=True, equipment_purchase__isnull=True, equipment_rental__isnull=True)
+            return queryset.filter(appointment__isnull=True, service_booking__isnull=True, pharmacy_order__isnull=True, equipment_purchase__isnull=True, equipment_rental__isnull=True)
         return queryset
 
 
@@ -50,14 +53,14 @@ class PaymentAdmin(admin.ModelAdmin):
     ]
     ordering = ['-created_at']
     readonly_fields = ['created_at', 'updated_at', 'verified_at']
-    raw_id_fields = ['patient', 'appointment', 'verified_by', 'pharmacy_order', 'equipment_purchase', 'equipment_rental']
+    raw_id_fields = ['patient', 'appointment', 'service_booking', 'verified_by', 'pharmacy_order', 'equipment_purchase', 'equipment_rental']
     
     # Include a preview field for uploaded payment proof (image URL)
     readonly_fields = readonly_fields + ['payment_proof_preview']
 
     fieldsets = (
         ('Payment Information', {
-            'fields': ('patient', 'appointment', 'pharmacy_order', 'equipment_purchase', 'equipment_rental', 'amount', 'payment_method', 'payment_status')
+            'fields': ('patient', 'appointment', 'service_booking', 'pharmacy_order', 'equipment_purchase', 'equipment_rental', 'amount', 'payment_method', 'payment_status')
         }),
         ('Transaction Details', {
             'fields': ('transaction_id', 'payment_proof_preview', 'payment_proof_url', 'payment_date')
@@ -92,6 +95,8 @@ class PaymentAdmin(admin.ModelAdmin):
         return base + ['linked_object']
 
     def linked_object(self, obj):
+        if obj.service_booking:
+            return format_html('<a href="/admin/appointments/servicebooking/{}/change/">ServiceBooking #{}</a>', obj.service_booking.id, obj.service_booking.id)
         if obj.appointment:
             return format_html('<a href="/admin/appointments/appointment/{}/change/">Appointment #{}</a>', obj.appointment.id, obj.appointment.id)
         if obj.pharmacy_order:
@@ -110,6 +115,9 @@ class PaymentAdmin(admin.ModelAdmin):
     # --- Per-type display helpers ---
     def appointment_service(self, obj):
         try:
+            # Check both service_booking and appointment for service name
+            if obj.service_booking:
+                return obj.service_booking.service.name
             return obj.appointment.service.name
         except Exception:
             return '-'
@@ -203,3 +211,15 @@ class PaymentAdmin(admin.ModelAdmin):
             # mark instance to allow the change in the model.save() hook
             obj._allow_payment_method_change = True
         super().save_model(request, obj, form, change)
+
+
+@admin.register(UserPaymentMethod)
+class UserPaymentMethodAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user_name', 'method', 'is_default', 'created_at']
+    list_filter = ['method', 'is_default', 'created_at']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name']
+    readonly_fields = ['created_at']
+
+    def user_name(self, obj):
+        return obj.user.get_full_name()
+    user_name.short_description = 'User'

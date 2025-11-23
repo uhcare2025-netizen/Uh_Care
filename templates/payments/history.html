@@ -1,161 +1,620 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block title %}Payment History - UH Care{% endblock %}
 
+{% block extra_css %}
+<style>
+  :root {
+    --uh-blue: #004a99;
+    --uh-blue-dark: #002d6b;
+    --uh-green: #009e4d;
+    --uh-green-dark: #007a3d;
+    --uh-red: #E60000;
+    --uh-yellow: #f59e0b;
+    --uh-blue-light: #e0f2ff;
+    --uh-green-light: #e6fff0;
+    --uh-yellow-light: #fffbeb;
+    --light-bg: #f8fafc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+    --card-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  body {
+    background-color: var(--light-bg);
+  }
+
+  /* Hero Header */
+  .payment-hero-header {
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.85) 0%, rgba(0, 45, 107, 0.85) 100%);
+    color: white;
+    padding: 3.5rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 74, 153, 0.2);
+  }
+
+  .payment-hero-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+  }
+
+  .payment-hero-header video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  .payment-hero-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 74, 153, 0.5);
+    z-index: 1;
+  }
+
+  .payment-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .payment-hero-text h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .payment-hero-text p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+
+  /* Stat Cards */
+  .payment-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 5px solid var(--uh-blue);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .payment-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    opacity: 0.06;
+  }
+
+  .payment-stat-card:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-8px);
+  }
+
+  .payment-stat-card.total {
+    border-top-color: var(--uh-blue);
+  }
+
+  .payment-stat-card.total::before {
+    background-color: var(--uh-blue);
+  }
+
+  .payment-stat-card.paid {
+    border-top-color: var(--uh-green);
+  }
+
+  .payment-stat-card.paid::before {
+    background-color: var(--uh-green);
+  }
+
+  .payment-stat-card.unpaid {
+    border-top-color: var(--uh-red);
+  }
+
+  .payment-stat-card.unpaid::before {
+    background-color: var(--uh-red);
+  }
+
+  .stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 12px;
+    flex-shrink-0;
+  }
+
+  .stat-icon.blue {
+    background: linear-gradient(135deg, var(--uh-blue-light) 0%, #c7e0ff 100%);
+    color: var(--uh-blue-dark);
+  }
+
+  .stat-icon.green {
+    background: linear-gradient(135deg, var(--uh-green-light) 0%, #c7f0d8 100%);
+    color: var(--uh-green-dark);
+  }
+
+  .stat-icon.red {
+    background: linear-gradient(135deg, #fee 0%, #fcc 100%);
+    color: var(--uh-red);
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .stat-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+  }
+
+  /* Filter Tabs */
+  .filter-tabs {
+    display: inline-flex;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .filter-tab {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  .filter-tab:hover {
+    background: #f0f0f0;
+  }
+
+  .filter-tab.active {
+    background: var(--uh-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 74, 153, 0.2);
+  }
+
+  /* Search Bar */
+  .search-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--uh-blue);
+    box-shadow: 0 0 0 3px rgba(0, 74, 153, 0.1);
+  }
+
+  .search-btn {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    padding: 0.875rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .search-btn:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Table Styling */
+  .payment-table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    margin-top: 2rem;
+  }
+
+  .payment-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .payment-table thead {
+    background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .payment-table thead th {
+    padding: 1.25rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+  }
+
+  .payment-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+  }
+
+  .payment-table tbody tr:hover {
+    background: #f8f9fa;
+  }
+
+  .payment-table td {
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .payment-ref {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: var(--uh-blue);
+  }
+
+  .payment-ref svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-pending {
+    background: var(--uh-yellow-light);
+    color: #9d5d00;
+  }
+
+  .status-unpaid {
+    background: linear-gradient(135deg, #fee 0%, #fcc 100%);
+    color: var(--uh-red);
+  }
+
+  .status-paid {
+    background: var(--uh-green-light);
+    color: var(--uh-green-dark);
+  }
+
+  .amount-value {
+    font-weight: 800;
+    color: var(--uh-green);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .action-btn-primary {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+  }
+
+  .action-btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(0, 74, 153, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .action-btn-secondary {
+    background: white;
+    color: var(--uh-blue);
+    border: 2px solid var(--uh-blue);
+  }
+
+  .action-btn-secondary:hover {
+    background: var(--uh-blue-light);
+  }
+
+  .action-btn-success {
+    background: linear-gradient(135deg, var(--uh-green) 0%, var(--uh-green-dark) 100%);
+    color: white;
+  }
+
+  .action-btn-success:hover {
+    box-shadow: 0 4px 12px rgba(0, 158, 77, 0.2);
+    transform: translateY(-1px);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.5rem;
+    color: #d1d5db;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
     <div class="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-uh-blue-700">Payment History</h1>
-                <p class="mt-2 text-lg text-gray-600">A record of your transactions, receipts and pending payments.</p>
-            </div>
-
-            <!-- Filter Tabs & Actions -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 flex-wrap">
-                <div class="flex items-center gap-2 p-1 bg-gray-200 rounded-lg">
-                    <a href="?status=all" class="py-2 px-4 rounded-md text-sm font-medium {% if status_filter == 'all' or not status_filter %}bg-uh-blue-700 text-white shadow{% else %}text-gray-600 hover:bg-gray-100{% endif %}">All</a>
-                    <a href="?status=paid" class="py-2 px-4 rounded-md text-sm font-medium {% if status_filter == 'paid' %}bg-uh-blue-700 text-white shadow{% else %}text-gray-600 hover:bg-gray-100{% endif %}">Paid</a>
-                    <a href="?status=unpaid" class="py-2 px-4 rounded-md text-sm font-medium {% if status_filter == 'unpaid' %}bg-uh-blue-700 text-white shadow{% else %}text-gray-600 hover:bg-gray-100{% endif %}">Unpaid</a>
-                    <a href="{% url 'payments:cash_commitments' %}" class="py-2 px-4 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100">Cash</a>
+        <!-- Hero Header -->
+        <div class="payment-hero-header">
+            <video autoplay muted loop playsinline>
+                <source src="{% static 'videos/hero.mp4' %}" type="video/mp4">
+            </video>
+            <div class="payment-hero-content">
+                <div class="payment-hero-text">
+                    <h1>Payment History</h1>
+                    <p>Complete record of your transactions and payments</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a href="?export=csv" class="font-semibold text-gray-700 bg-white border border-gray-300 py-2.5 px-4 rounded-lg shadow-sm hover:bg-gray-50 text-sm">Export CSV</a>
-                    <button onclick="window.print();return false;" class="font-semibold text-gray-700 bg-white border border-gray-300 py-2.5 px-4 rounded-lg shadow-sm hover:bg-gray-50 text-sm">Print</button>
+                <div style="position: relative; z-index: 2;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 5rem; height: 5rem; opacity: 0.3;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659M12 6V4.5m0 15V18" />
+                    </svg>
                 </div>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-5">
-                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-uh-blue-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-uh-blue-700">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.768 0-1.536.219-2.121.659-.957.712-1.631 1.903-1.631 3.182z M12 6V4.5m0 15V18" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="text-sm font-medium text-gray-500">Total gross</div>
-                    <div class="text-2xl font-bold text-uh-blue-700">रू {{ gross_total|default:0|floatformat:2 }}</div>
-                    <div class="text-xs text-gray-500 mt-1">All billed items</div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-5">
-                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-uh-green-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-uh-green-600">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="text-sm font-medium text-gray-500">Total paid</div>
-                    <div class="text-2xl font-bold text-uh-green-600">रू {{ total_paid|default:0|floatformat:2 }}</div>
-                    <div class="text-xs text-gray-500 mt-1">Amount already received</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Total Gross Card -->
+            <div class="payment-stat-card total">
+                <div class="flex items-start gap-4">
+                    <div class="stat-icon blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659M12 6V4.5m0 15V18" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="stat-label">Total Gross</div>
+                        <div class="stat-value">रू {{ gross_total|default:0|floatformat:2 }}</div>
+                        <div class="stat-description">All billed items</div>
+                    </div>
                 </div>
             </div>
-            <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-5">
-                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-uh-red-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-uh-red-600">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                    </svg>
+
+            <!-- Total Paid Card -->
+            <div class="payment-stat-card paid">
+                <div class="flex items-start gap-4">
+                    <div class="stat-icon green">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="stat-label">Total Paid</div>
+                        <div class="stat-value" style="color: var(--uh-green);">रू {{ total_paid|default:0|floatformat:2 }}</div>
+                        <div class="stat-description">Amount already received</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="text-sm font-medium text-gray-500">Net unpaid</div>
-                    <div class="text-2xl font-bold text-uh-red-600">रू {{ net_unpaid|default:0|floatformat:2 }}</div>
-                    <div class="text-xs text-gray-500 mt-1">Gross − Paid</div>
+            </div>
+
+            <!-- Net Unpaid Card -->
+            <div class="payment-stat-card unpaid">
+                <div class="flex items-start gap-4">
+                    <div class="stat-icon red">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="stat-label">Net Unpaid</div>
+                        <div class="stat-value" style="color: var(--uh-red);">रू {{ net_unpaid|default:0|floatformat:2 }}</div>
+                        <div class="stat-description">Gross − Paid</div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Filters and Actions -->
+        <div class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="filter-tabs">
+                <a href="?status=all" class="filter-tab {% if status_filter == 'all' or not status_filter %}active{% endif %}">All</a>
+                <a href="?status=paid" class="filter-tab {% if status_filter == 'paid' %}active{% endif %}">Paid</a>
+                <a href="?status=unpaid" class="filter-tab {% if status_filter == 'unpaid' %}active{% endif %}">Unpaid</a>
+                <a href="{% url 'payments:cash_commitments' %}" class="filter-tab">Cash Commitments</a>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="?export=csv" class="action-btn action-btn-secondary" title="Export to CSV">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-1" style="vertical-align: middle;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.16 4.172a.75.75 0 0 1 .75-.75h14.68a.75.75 0 0 1 .53 1.28l-6.15 6.15a.75.75 0 0 0 0 1.06l6.15 6.15a.75.75 0 1 1-1.06 1.06l-6.15-6.15a.75.75 0 0 0-1.06 0l-6.15 6.15a.75.75 0 0 1-1.06-1.06l6.15-6.15a.75.75 0 0 0 0-1.06L3.22 5.53a.75.75 0 0 1 .53-1.28z" />
+                    </svg>
+                    Export
+                </a>
+                <button onclick="window.print();return false;" class="action-btn action-btn-secondary" title="Print this page">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-1" style="vertical-align: middle;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a9.753 9.753 0 0 0 2.905.775M6.72 13.829l-2.147.896a9.753 9.753 0 0 0 1.059 1.735m1.088-10.492a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0zm9 0a5.25 5.25 0 1 0-10.5 0 5.25 5.25 0 0 0 10.5 0z" />
+                    </svg>
+                    Print
+                </button>
+            </div>
+        </div>
+
+
         <!-- Search Bar -->
-        <div class="mt-8">
-            <form method="get">
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text" name="q" placeholder="Search by order, appointment or reference" class="form-input flex-grow px-4 py-2.5" value="{{ request.GET.q|default:'' }}" />
-                    <button class="bg-uh-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200" type="submit">Search</button>
-                </div>
+        <div class="search-section mt-8">
+            <form method="get" class="flex flex-col sm:flex-row gap-3">
+                <input type="text" name="q" placeholder="Search by order, appointment or reference..." class="search-input flex-grow" value="{{ request.GET.q|default:'' }}" />
+                <button class="search-btn" type="submit">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2" style="vertical-align: middle;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.5 5.5a7.5 7.5 0 0 0 10.5 10.5z" />
+                    </svg>
+                    Search
+                </button>
             </form>
         </div>
 
         <!-- Payments Table -->
         {% if payments.exists %}
-            <div class="mt-8 flex flex-col">
-                <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                        <div class="shadow-xl rounded-lg overflow-hidden border-b border-gray-200">
-                            <table class="min-w-full divide-y divide-gray-200" aria-label="Payment history">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    {% for p in payments %}
-                                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ p.created_at|date:'M d, Y' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                                                <div class="flex items-center gap-2">
-                                                    {% if p.appointment %}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-uh-blue-700"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-                                                        <span>Appt #{{ p.appointment.id }}</span>
-                                                    {% elif p.pharmacy_order %}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-uh-blue-700"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
-                                                        <span>Order #{{ p.pharmacy_order.order_number }}</span>
-                                                    {% elif p.equipment_purchase %}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-uh-blue-700"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 011.621-.056A48.424 48.424 0 0112 3.86m0 0a48.424 48.424 0 015.103.056c1.13.094 1.976 1.057 1.976 2.192V7.5M8.25 7.5h7.5M8.25 7.5V15c0 .621.504 1.125 1.125 1.125h.375c.621 0 1.125-.504 1.125-1.125V7.5m-3 0V15c0 .621.504 1.125 1.125 1.125h.375c.621 0 1.125-.504 1.125-1.125V7.5m-3 0V15c0 .621.504 1.125 1.125 1.125h.375c.621 0 1.125-.504 1.125-1.125V7.5" /></svg>
-                                                        <span>Purchase #{{ p.equipment_purchase.order_number }}</span>
-                                                    {% elif p.equipment_rental %}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-uh-blue-700"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-4.992h-4.992m0 0v-4.992m0 4.992l-3.181-3.183a8.25 8.25 0 0111.664 0l3.181 3.183" /></svg>
-                                                        <span>Rental #{{ p.equipment_rental.rental_number }}</span>
-                                                    {% else %}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h13.5m-13.5 4.5h13.5m-13.5 4.5h13.5" /></svg>
-                                                        <span>Payment #{{ p.id }}</span>
-                                                    {% endif %}
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{% if p.appointment %} {{ p.appointment.service.name|truncatechars:30 }} • {{ p.appointment.provider.get_full_name|default:'' }}{% endif %}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ p.get_payment_method_display|default:p.payment_method }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                {% if p.payment_status == 'pending' %}
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
-                                                {% elif p.payment_status == 'unpaid' %}
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-uh-red-100 text-uh-red-600">Unpaid</span>
-                                                {% elif p.payment_status == 'paid' %}
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-uh-green-100 text-uh-green-600">Paid</span>
-                                                {% else %}
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{{ p.get_payment_status_display|default:p.payment_status }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-uh-green-600">रू {{ p.amount|floatformat:2 }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                                {% if p.payment_status == 'unpaid' %}
-                                                    <a href="{% url 'payments:detail' p.id %}" class="font-semibold text-uh-blue-700 bg-uh-blue-100 py-2 px-3 rounded-lg hover:bg-uh-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200 text-xs">Pay / Select Method</a>
-                                                {% else %}
-                                                    <a href="{% url 'payments:detail' p.id %}" class="font-semibold text-gray-700 bg-white border border-gray-300 py-2 px-3 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200 text-xs">View Details</a>
-                                                {% endif %}
-                                                {% if p.payment_method == 'cash' and p.payment_status == 'unpaid' %}
-                                                    <a href="{% url 'payments:confirm' p.id %}" class="font-semibold text-white bg-uh-green-600 py-2 px-3 rounded-lg shadow-sm hover:bg-uh-green-500 focus:outline-none focus:ring-2 focus:ring-uh-green-600 focus:ring-offset-2 transition-all duration-200 text-xs">Confirm</a>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+            <div class="payment-table-container">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Details</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in payments %}
+                            <tr>
+                                <td>{{ p.created_at|date:'M d, Y' }}</td>
+                                <td>
+                                    <div class="payment-ref">
+                                        {% if p.appointment %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                                            <span>Appt #{{ p.appointment.id }}</span>
+                                        {% elif p.pharmacy_order %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
+                                            <span>Order #{{ p.pharmacy_order.order_number }}</span>
+                                        {% elif p.equipment_purchase %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 011.621-.056A48.424 48.424 0 0112 3.86m0 0a48.424 48.424 0 015.103.056c1.13.094 1.976 1.057 1.976 2.192V7.5M8.25 7.5h7.5M8.25 7.5V15c0 .621.504 1.125 1.125 1.125h.375c.621 0 1.125-.504 1.125-1.125V7.5m-3 0V15c0 .621.504 1.125 1.125 1.125h.375c.621 0 1.125-.504 1.125-1.125V7.5m-3 0V15c0 .621.504 1.125 1.125 1.125h.375c.621 0 1.125-.504 1.125-1.125V7.5" /></svg>
+                                            <span>Purchase #{{ p.equipment_purchase.order_number }}</span>
+                                        {% elif p.equipment_rental %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-4.992h-4.992m0 0v-4.992m0 4.992l-3.181-3.183a8.25 8.25 0 0111.664 0l3.181 3.183" /></svg>
+                                            <span>Rental #{{ p.equipment_rental.rental_number }}</span>
+                                        {% else %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h13.5m-13.5 4.5h13.5m-13.5 4.5h13.5" /></svg>
+                                            <span>Payment #{{ p.id }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if p.appointment %}
+                                        {{ p.appointment.service.name|truncatechars:30 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ p.get_payment_method_display|default:p.payment_method }}</td>
+                                <td>
+                                    {% if p.payment_status == 'pending' %}
+                                        <span class="status-badge status-pending">Pending</span>
+                                    {% elif p.payment_status == 'unpaid' %}
+                                        <span class="status-badge status-unpaid">Unpaid</span>
+                                    {% elif p.payment_status == 'paid' %}
+                                        <span class="status-badge status-paid">Paid</span>
+                                    {% else %}
+                                        <span class="status-badge">{{ p.get_payment_status_display|default:p.payment_status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right;"><span class="amount-value">रू {{ p.amount|floatformat:2 }}</span></td>
+                                <td style="text-align: right;">
+                                    <div class="action-buttons">
+                                        {% if p.payment_status == 'unpaid' %}
+                                            <a href="{% url 'payments:detail' p.id %}" class="action-btn action-btn-primary">Pay Now</a>
+                                        {% else %}
+                                            <a href="{% url 'payments:detail' p.id %}" class="action-btn action-btn-secondary">View</a>
+                                        {% endif %}
+                                        {% if p.payment_method == 'cash' and p.payment_status == 'unpaid' %}
+                                            <a href="{% url 'payments:confirm' p.id %}" class="action-btn action-btn-success">Confirm</a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% else %}
-            <div class="mt-8 bg-white rounded-lg shadow-xl p-10 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-gray-400 mx-auto mb-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                <h3 class="text-xl font-semibold text-gray-800">No payments found</h3>
-                <p class="text-gray-600 mt-2">Your payment history will appear here once you make a transaction.</p>
+            <div class="empty-state mt-8">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="empty-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 011.621-.056A48.424 48.424 0 0112 3.86m0 0a48.424 48.424 0 015.103.056c1.13.094 1.976 1.057 1.976 2.192V7.5m-10.5 0h10.5m-10.5 0v5.25m0-10.5h.008v.008H2.25v-.008z" />
+                </svg>
+                <h3 class="empty-title">No payments found</h3>
+                <p class="empty-text">Your payment history will appear here once you make a transaction.</p>
             </div>
         {% endif %}
     </div>

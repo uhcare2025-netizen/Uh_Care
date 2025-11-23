@@ -73,6 +73,23 @@ class Service(models.Model):
     )
     duration_unit = models.CharField(max_length=20, choices=DURATION_UNITS, default='session')
     
+    # Security Deposit (optional)
+    requires_security_deposit = models.BooleanField(
+        default=False,
+        help_text="Check if this service requires a security deposit"
+    )
+    security_deposit_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Security deposit amount (refundable after service completion)"
+    )
+    security_deposit_description = models.TextField(
+        blank=True,
+        help_text="Additional notes about the security deposit (e.g., conditions for refund)"
+    )
+    
     # Details
     what_included = models.TextField(help_text="What's included in this service")
     requirements = models.TextField(blank=True, help_text="Patient requirements or preparations")

@@ -3,101 +3,454 @@
 
 {% block title %}My Purchases - UH Care{% endblock %}
 
-{% block extra_css %}{% endblock %}
+{% block extra_css %}
+<style>
+  :root {
+    --uh-blue: #004a99;
+    --uh-blue-dark: #002d6b;
+    --uh-green: #009e4d;
+    --uh-green-dark: #007a3d;
+    --uh-red: #E60000;
+    --uh-yellow: #f59e0b;
+    --uh-blue-light: #e0f2ff;
+    --uh-green-light: #e6fff0;
+    --uh-yellow-light: #fffbeb;
+    --light-bg: #f8fafc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+    --card-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  body {
+    background-color: var(--light-bg);
+  }
+
+  /* Hero Header */
+  .purchases-hero {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    padding: 3.5rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 74, 153, 0.2);
+  }
+
+  .purchases-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50px;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+  }
+
+  .purchases-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+  }
+
+  .purchases-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .purchases-hero h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .purchases-hero p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+
+  /* Filter Tabs */
+  .filter-container {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filter-tab {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f0f0f0;
+    color: var(--text-secondary);
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .filter-tab:hover {
+    background: #e0e0e0;
+  }
+
+  .filter-tab.active {
+    background: var(--uh-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 74, 153, 0.2);
+  }
+
+  /* Purchase Card */
+  .purchase-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 5px solid var(--uh-blue);
+  }
+
+  .purchase-card:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .purchase-card-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2rem;
+    padding: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .purchase-card-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  .purchase-image {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .purchase-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .purchase-details h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .purchase-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+
+  .purchase-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .purchase-meta-item svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .purchase-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+  }
+
+  .status-pending {
+    background: var(--uh-yellow-light);
+    color: #9d5d00;
+  }
+
+  .status-confirmed {
+    background: var(--uh-blue-light);
+    color: var(--uh-blue-dark);
+  }
+
+  .status-completed {
+    background: var(--uh-green-light);
+    color: var(--uh-green-dark);
+  }
+
+  .status-delivered {
+    background: var(--uh-green-light);
+    color: var(--uh-green-dark);
+  }
+
+  .status-cancelled {
+    background: #fee;
+    color: var(--uh-red);
+  }
+
+  .action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .action-btn-primary {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+  }
+
+  .action-btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .action-btn-danger {
+    background: linear-gradient(135deg, var(--uh-red) 0%, #b30000 100%);
+    color: white;
+  }
+
+  .action-btn-danger:hover {
+    box-shadow: 0 6px 16px rgba(230, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Empty State */
+  .empty-state {
+    background: white;
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+  }
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.5rem;
+    color: #d1d5db;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .cta-btn:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .price-tag {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--uh-green);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
-    <h1 class="text-3xl font-bold text-uh-blue-700">My Purchases</h1>
-    <a href="{% url 'equipment:list' %}" class="btn btn-outline flex-shrink-0">Browse equipment</a>
+<div class="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+  <!-- Hero Header -->
+  <div class="purchases-hero">
+    <div class="purchases-hero-content">
+      <div>
+        <h1>My Purchases</h1>
+        <p>Track and manage your medical equipment orders</p>
+      </div>
+      <div style="position: relative; z-index: 2;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 5rem; height: 5rem; opacity: 0.3;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0A24.226 24.226 0 015.378 7.5H20.75m0 0A24.226 24.226 0 018.75 2.5m12 19.5v-2.257m-2.991 1.261A25.07 25.07 0 005.999 12c0 7.46 3.564 14.237 9 18.488m13.5-13.488h-5.25m0 0a3.001 3.001 0 00-5.145-2.876m-1.36 7.752H7.5c-1.125 0-2.25.045-3.375.135A23.911 23.911 0 005.375 15M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-container">
+    <div class="filter-tabs">
+      <a href="?status=all" class="filter-tab {% if status_filter == 'all' or not status_filter %}active{% endif %}">All</a>
+      <a href="?status=pending" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+      <a href="?status=confirmed" class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+      <a href="?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">Completed</a>
+      <a href="?status=cancelled" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+    </div>
   </div>
 
   {% if purchases %}
-  <div class="space-y-6">
+  <div class="space-y-4">
     {% for purchase in purchases %}
     <!-- Purchase Card -->
-    <article class="bg-white rounded-lg shadow-xl p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
-      <!-- Image -->
-      <div class="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-        {% if purchase.equipment.image %}
-          <img src="{{ purchase.equipment.image.url }}" alt="{{ purchase.equipment.name }}" class="w-full h-full object-cover" />
-        {% elif purchase.equipment.image_url %}
-          <img src="{{ purchase.equipment.image_url }}" alt="{{ purchase.equipment.name }}" class="w-full h-full object-cover" />
-        {% else %}
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-gray-400">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 01-2.25 2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 013 12V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25V12zM12 12.75V18m0 0l-3-3m3 3l3-3m-3-6h.008v.008H12V6.75z" />
-          </svg>
-        {% endif %}
-      </div>
-
-      <!-- Details -->
-      <div class="flex-1 min-w-0">
-        <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
-          <div class="min-w-0">
-            <h3 class="text-lg font-semibold text-gray-900 truncate">{{ purchase.equipment.name }}</h3>
-            <div class="text-sm text-gray-600 mt-1">Order <strong>#{{ purchase.order_number }}</strong> • {{ purchase.created_at|date:"F d, Y" }}</div>
-          </div>
-
-          <div class="text-left sm:text-right flex-shrink-0">
-            {% if purchase.status == 'completed' or purchase.status == 'delivered' %}
-              <span class="py-1 px-3 rounded-full text-xs font-semibold bg-uh-green-100 text-uh-green-600">{{ purchase.get_status_display }}</span>
-            {% elif purchase.status == 'pending' %}
-              <span class="py-1 px-3 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">{{ purchase.get_status_display }}</span>
-            {% elif purchase.status == 'cancelled' %}
-              <span class="py-1 px-3 rounded-full text-xs font-semibold bg-uh-red-100 text-uh-red-600">{{ purchase.get_status_display }}</span>
-            {% else %}
-              <span class="py-1 px-3 rounded-full text-xs font-semibold bg-uh-blue-100 text-uh-blue-700">{{ purchase.get_status_display }}</span>
-            {% endif %}
-            <div class="text-lg font-bold text-uh-green-600 mt-2">रु {{ purchase.total_amount|intcomma }}</div>
-          </div>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-gray-200 flex flex-wrap items-center gap-3">
-          <a href="{% url 'equipment:purchase_detail' purchase.order_number %}" class="btn btn-secondary">View details</a>
-
-          {% if purchase.unpaid_payment %}
-            <a href="{% url 'payments:detail' purchase.unpaid_payment.id %}" class="btn btn-danger">Pay now</a>
-            <span class="text-sm text-uh-red-600 font-medium">Unpaid • {{ purchase.unpaid_payment.created_at|date:"M d, Y" }}</span>
+    <article class="purchase-card">
+      <div class="purchase-card-content">
+        <!-- Image -->
+        <div class="purchase-image">
+          {% if purchase.equipment.image %}
+            <img src="{{ purchase.equipment.image.url }}" alt="{{ purchase.equipment.name }}" />
+          {% elif purchase.equipment.image_url %}
+            <img src="{{ purchase.equipment.image_url }}" alt="{{ purchase.equipment.name }}" />
           {% else %}
-            <span class="text-sm text-gray-600">{{ purchase.quantity }} × રૂ {{ purchase.unit_price }}</span>
-          {% endif %}
-
-          {% if purchase.status == 'pending' %}
-            <button type="button" class="btn btn-danger open-cancel-modal" data-action-url="{% url 'equipment:cancel_purchase' purchase.order_number %}" data-purchase-id="{{ purchase.order_number }}">Cancel order</button>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-gray-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0A24.226 24.226 0 015.378 7.5H20.75m0 0A24.226 24.226 0 018.75 2.5m12 19.5v-2.257m-2.991 1.261A25.07 25.07 0 005.999 12c0 7.46 3.564 14.237 9 18.488m13.5-13.488h-5.25m0 0a3.001 3.001 0 00-5.145-2.876m-1.36 7.752H7.5c-1.125 0-2.25.045-3.375.135A23.911 23.911 0 005.375 15M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+            </svg>
           {% endif %}
         </div>
 
-        {% if purchase.warranty_expires_at %}
-        <div class="mt-3 text-sm text-gray-600">Warranty until: <strong>{{ purchase.warranty_expires_at|date:"M d, Y" }}</strong></div>
-        {% endif %}
+        <!-- Details -->
+        <div class="purchase-details">
+          <h3>{{ purchase.equipment.name }}</h3>
+          <div class="purchase-meta">
+            <div class="purchase-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Order #{{ purchase.order_number }}</span>
+            </div>
+            <div class="purchase-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              <span>{{ purchase.created_at|date:"M d, Y" }}</span>
+            </div>
+            <div class="purchase-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <strong>रु {{ purchase.total_amount|intcomma }}</strong>
+            </div>
+          </div>
+          {% if purchase.warranty_expires_at %}
+          <div class="purchase-meta" style="margin-bottom: 0;">
+            <div class="purchase-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Warranty until: {{ purchase.warranty_expires_at|date:"M d, Y" }}</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Actions & Status -->
+        <div class="purchase-actions">
+          <span class="status-badge status-{% if purchase.status == 'completed' or purchase.status == 'delivered' %}completed{% elif purchase.status == 'pending' %}pending{% elif purchase.status == 'cancelled' %}cancelled{% else %}confirmed{% endif %}">{{ purchase.get_status_display }}</span>
+          <a href="{% url 'equipment:purchase_detail' purchase.order_number %}" class="action-btn action-btn-primary">View Details</a>
+          {% if purchase.unpaid_payment %}
+            <a href="{% url 'payments:detail' purchase.unpaid_payment.id %}" class="action-btn action-btn-danger">Pay Now</a>
+          {% endif %}
+          {% if purchase.status == 'pending' %}
+            <button type="button" class="action-btn action-btn-danger open-cancel-modal" data-action-url="{% url 'equipment:cancel_purchase' purchase.order_number %}" data-purchase-id="{{ purchase.order_number }}">Cancel Order</button>
+          {% endif %}
+        </div>
       </div>
     </article>
     {% endfor %}
   </div>
   {% else %}
-  <div class="text-center p-12 bg-white rounded-lg shadow-xl">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-400 mx-auto mb-4">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+
+  <div class="empty-state">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="empty-icon">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0A24.226 24.226 0 015.378 7.5H20.75m0 0A24.226 24.226 0 018.75 2.5m12 19.5v-2.257m-2.991 1.261A25.07 25.07 0 005.999 12c0 7.46 3.564 14.237 9 18.488m13.5-13.488h-5.25m0 0a3.001 3.001 0 00-5.145-2.876m-1.36 7.752H7.5c-1.125 0-2.25.045-3.375.135A23.911 23.911 0 005.375 15M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
     </svg>
-    <h3 class="text-2xl font-semibold text-gray-800 mb-2">No purchases yet</h3>
-    <p class="text-gray-600 max-w-md mx-auto mb-6">Your purchase history will appear here. Browse equipment to buy for home care.</p>
-    <a href="{% url 'equipment:list' %}" class="btn btn-primary">Browse equipment</a>
+    <h3 class="empty-title">No purchases yet</h3>
+    <p class="empty-text">Your purchase history will appear here. Browse medical equipment to get started.</p>
+    <a href="{% url 'equipment:list' %}" class="cta-btn">Browse Equipment</a>
   </div>
   {% endif %}
-
-  <!-- Cancellation Modal (hidden by default) -->
-  <div id="cancel-modal" class="hidden fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-    <div class="relative bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-lg transition-all transform scale-95 opacity-0" id="cancel-modal-panel">
-      <h3 class="text-xl font-semibold text-uh-blue-700" id="modal-title">Cancel Purchase</h3>
-      <p id="cancel-modal-desc" class="text-gray-600 mt-2">Are you sure you want to cancel this purchase? This action cannot be undone.</p>
+  
+  <!-- Cancellation Modal -->
+  <div id="cancel-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 p-4">
+    <div class="bg-white rounded-lg shadow-xl p-6 sm:p-8 max-w-lg w-full">
+      <h3 class="text-2xl font-bold text-uh-blue-700 mb-2">Cancel Purchase</h3>
+      <p id="cancel-modal-desc" class="text-gray-600 mb-6">Please confirm you want to cancel this purchase.</p>
 
       <form id="cancel-form" method="post" action="">
         {% csrf_token %}
-        <div class="flex flex-col-reverse sm:flex-row gap-3 justify-end mt-6">
-          <button type="button" class="btn btn-secondary w-full sm:w-auto" id="cancel-modal-close">Close</button>
-          <button type="submit" class="btn btn-danger w-full sm:w-auto">Confirm Cancellation</button>
+        <div class="flex gap-4 justify-end mt-8">
+          <button type="button" class="font-semibold text-gray-700 bg-white border border-gray-300 py-2 px-5 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200" id="cancel-modal-close">
+            Close
+          </button>
+          <button type="submit" class="bg-uh-red-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:bg-uh-red-500 focus:outline-none focus:ring-2 focus:ring-uh-red-600 focus:ring-offset-2 transition-all duration-200">
+            Confirm Cancel
+          </button>
         </div>
       </form>
     </div>
@@ -109,9 +462,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('cancel-modal');
-    if (!modal) return; // Exit if modal not on page
-
-    const modalPanel = document.getElementById('cancel-modal-panel');
     const cancelForm = document.getElementById('cancel-form');
     const modalDesc = document.getElementById('cancel-modal-desc');
     const closeBtn = document.getElementById('cancel-modal-close');
@@ -120,19 +470,13 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelForm.action = actionUrl;
         modalDesc.textContent = 'You are about to cancel purchase #' + title + '. This action cannot be undone.';
         modal.classList.remove('hidden');
-        setTimeout(() => {
-            modalPanel.classList.remove('scale-95', 'opacity-0');
-            modalPanel.classList.add('scale-100', 'opacity-100');
-        }, 10);
+        modal.classList.add('flex');
     }
 
     function closeModal() {
-        modalPanel.classList.add('scale-95', 'opacity-0');
-        modalPanel.classList.remove('scale-100', 'opacity-100');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            cancelForm.action = '';
-        }, 200);
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        cancelForm.action = '';
     }
 
     document.querySelectorAll('.open-cancel-modal').forEach(function(btn){

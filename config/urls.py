@@ -6,13 +6,15 @@ from apps.accounts.views import PasswordResetNotifyView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Override the default password-reset form so site admins can be notified
-    # when a user requests a password reset. This path must be registered
-    # before including the built-in auth urls so it takes precedence.
-    path('accounts/password_reset/', PasswordResetNotifyView.as_view(), name='password_reset'),
-    # Include Django's built-in auth views (login/logout/password reset/confirm/etc.)
-    path('accounts/', include('django.contrib.auth.urls')),
+    # Custom accounts app (includes login, register, profile, etc.)
+    # This must come BEFORE django.contrib.auth.urls so custom views take precedence
     path('', include('apps.accounts.urls')),
+    # Override the default password-reset form so site admins can be notified
+    # when a user requests a password reset.
+    path('accounts/password_reset/', PasswordResetNotifyView.as_view(), name='password_reset'),
+    # Include Django's built-in auth views for password reset flows and other views
+    # (Note: login is handled by custom view in apps.accounts.urls)
+    path('accounts/', include('django.contrib.auth.urls')),
     path('services/', include('apps.services.urls')),
     path('appointments/', include('apps.appointments.urls')),
     path('dashboard/', include('apps.dashboard.urls')),

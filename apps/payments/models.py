@@ -1,7 +1,9 @@
 from django.db import models
 from apps.accounts.models import User
 from apps.appointments.models import Appointment
+from apps.appointments.models import ServiceBooking
 from django.conf import settings
+from apps.accounts.models import User
 
 class Payment(models.Model):
     """
@@ -25,6 +27,15 @@ class Payment(models.Model):
         Appointment, 
         on_delete=models.CASCADE, 
         related_name='payments',
+        null=True,
+        blank=True
+    )
+
+    # New: reference to ServiceBooking for migrated/new service payments
+    service_booking = models.ForeignKey(
+        ServiceBooking,
+        on_delete=models.CASCADE,
+        related_name='payments_as_service_booking',
         null=True,
         blank=True
     )
@@ -122,3 +133,24 @@ class Payment(models.Model):
                     raise ValidationError('Payment method is locked and cannot be changed once set.')
 
         return super().save(*args, **kwargs)
+
+
+class UserPaymentMethod(models.Model):
+    """Store user-specific payment preferences (QR, bank details, default method).
+
+    This lets providers and patients store a preferred payment method that can
+    be used to prefill payment records during checkout.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_methods')
+    method = models.CharField(max_length=20, choices=Payment.PAYMENT_METHOD_CHOICES)
+    qr_code_url = models.URLField(blank=True, null=True, help_text='Optional QR image or payment link')
+    bank_info = models.TextField(blank=True, null=True, help_text='Bank account / UPI / other details')
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'user_payment_methods'
+        ordering = ['-is_default', '-created_at']
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.get_method_display()}" 

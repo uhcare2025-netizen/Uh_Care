@@ -29,8 +29,8 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price_range_display', 'duration_unit', 'is_active', 'is_featured', 'total_bookings']
-    list_filter = ['category', 'is_active', 'is_featured', 'created_at']
+    list_display = ['name', 'category', 'price_range_display', 'duration_unit', 'security_deposit_display', 'is_active', 'is_featured', 'total_bookings']
+    list_filter = ['category', 'is_active', 'is_featured', 'requires_security_deposit', 'created_at']
     search_fields = ['name', 'description', 'short_description']
     ordering = ['-is_featured', '-created_at']
     prepopulated_fields = {'slug': ('name',)}
@@ -42,6 +42,10 @@ class ServiceAdmin(admin.ModelAdmin):
         }),
         ('Pricing', {
             'fields': ('base_price', 'price_min', 'price_max', 'duration_unit')
+        }),
+        ('Security Deposit', {
+            'fields': ('requires_security_deposit', 'security_deposit_amount', 'security_deposit_description'),
+            'description': 'Configure security deposit requirements for this service. Security deposits are refundable after service completion.'
         }),
         ('Details', {
             'fields': ('what_included', 'requirements', 'image', 'image_url')
@@ -58,6 +62,15 @@ class ServiceAdmin(admin.ModelAdmin):
     def price_range_display(self, obj):
         return obj.get_price_display()
     price_range_display.short_description = 'Price'
+    
+    def security_deposit_display(self, obj):
+        if obj.requires_security_deposit:
+            return format_html(
+                '<span style="color: #009e4d; font-weight: bold;">रु {}</span>',
+                f"{obj.security_deposit_amount:,.2f}"
+            )
+        return format_html('<span style="color: #6b7280;">None</span>')
+    security_deposit_display.short_description = 'Security Deposit'
 
 
 @admin.register(Wishlist)

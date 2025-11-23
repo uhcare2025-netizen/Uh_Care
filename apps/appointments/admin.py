@@ -4,7 +4,7 @@ Appointments Admin Configuration
 
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Appointment, ProviderAvailability
+from .models import ServiceBooking
 from .models import (
     PersonalAppointment,
     ProviderSchedule,
@@ -12,105 +12,10 @@ from .models import (
 )
 
 
-@admin.register(Appointment)
-class AppointmentAdmin(admin.ModelAdmin):
-    list_display = [
-        'id', 'patient_name', 'provider_name', 'service', 
-        'appointment_date', 'appointment_time', 'status_badge', 'service_price', 'final_price', 'total_amount'
-    ]
-    list_filter = ['status', 'appointment_date', 'created_at']
-    search_fields = [
-        'patient__email', 'patient__first_name', 'patient__last_name',
-        'provider__first_name', 'provider__last_name', 'service__name'
-    ]
-    ordering = ['-appointment_date', '-appointment_time']
-    readonly_fields = ['created_at', 'updated_at', 'confirmed_at', 'completed_at']
-    raw_id_fields = ['patient', 'provider', 'service']
+# Note: ProviderAvailability model is intentionally not registered in admin
+# to avoid duplicate/confusing admin entries. Use `ProviderSchedule` for
+# managing provider working hours and slot configuration.
     
-    fieldsets = (
-        ('Appointment Details', {
-            'fields': ('patient', 'provider', 'service', 'status')
-        }),
-        ('Schedule', {
-            'fields': ('appointment_date', 'appointment_time', 'duration_hours', 'service_address')
-        }),
-        ('Pricing', {
-            'fields': ('service_price', 'final_price', 'additional_charges', 'total_amount')
-        }),
-        ('Notes', {
-            'fields': ('patient_notes', 'provider_notes', 'cancellation_reason')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at', 'confirmed_at', 'completed_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def patient_name(self, obj):
-        return obj.patient.get_full_name()
-    patient_name.short_description = 'Patient'
-    
-    def provider_name(self, obj):
-        return obj.provider.get_full_name() if obj.provider else 'Unassigned'
-    provider_name.short_description = 'Provider'
-    
-    def status_badge(self, obj):
-        colors = {
-            'pending': '#FF9500',
-            'confirmed': '#007AFF',
-            'in_progress': '#5856D6',
-            'completed': '#34C759',
-            'cancelled': '#8E8E93',
-            'rejected': '#FF3B30',
-        }
-        color = colors.get(obj.status, '#8E8E93')
-        return format_html(
-            '<span style="background: {}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">{}</span>',
-            color,
-            obj.get_status_display()
-        )
-    status_badge.short_description = 'Status'
-    
-    actions = ['mark_as_confirmed', 'mark_as_completed', 'mark_as_cancelled']
-    
-    def mark_as_confirmed(self, request, queryset):
-        from django.utils import timezone
-        count = queryset.filter(status='pending').update(
-            status='confirmed',
-            confirmed_at=timezone.now()
-        )
-        self.message_user(request, f'{count} appointment(s) marked as confirmed.')
-    mark_as_confirmed.short_description = 'Mark selected as Confirmed'
-    
-    def mark_as_completed(self, request, queryset):
-        from django.utils import timezone
-        count = queryset.filter(status__in=['confirmed', 'in_progress']).update(
-            status='completed',
-            completed_at=timezone.now()
-        )
-        self.message_user(request, f'{count} appointment(s) marked as completed.')
-    mark_as_completed.short_description = 'Mark selected as Completed'
-    
-    def mark_as_cancelled(self, request, queryset):
-        count = queryset.exclude(status__in=['completed', 'cancelled']).update(
-            status='cancelled'
-        )
-        self.message_user(request, f'{count} appointment(s) marked as cancelled.')
-    mark_as_cancelled.short_description = 'Mark selected as Cancelled'
-
-    def save_model(self, request, obj, form, change):
-        if change:
-            setattr(obj, '_allow_modification', True)
-        super().save_model(request, obj, form, change)
-
-
-@admin.register(ProviderAvailability)
-class ProviderAvailabilityAdmin(admin.ModelAdmin):
-    list_display = ['provider', 'day_of_week', 'start_time', 'end_time', 'is_available']
-    list_filter = ['day_of_week', 'is_available']
-    search_fields = ['provider__email', 'provider__first_name', 'provider__last_name']
-    ordering = ['provider', 'day_of_week', 'start_time']
-    raw_id_fields = ['provider']
 
 
 @admin.register(ProviderSchedule)
@@ -119,6 +24,7 @@ class ProviderScheduleAdmin(admin.ModelAdmin):
     list_filter = ['day_of_week', 'is_available']
     search_fields = ['provider__email', 'provider__first_name', 'provider__last_name']
     ordering = ['provider', 'day_of_week', 'start_time']
+    list_editable = ['is_available', 'slot_duration']
     
     fieldsets = (
         ('Provider', {
@@ -137,7 +43,7 @@ class ProviderScheduleAdmin(admin.ModelAdmin):
 class PersonalAppointmentAdmin(admin.ModelAdmin):
     list_display = [
         'id', 'patient_name', 'provider_name', 'appointment_type',
-        'appointment_date', 'appointment_time', 'location_type',
+        'appointment_date', 'appointment_time', 'location_type', 'patient_phone',
         'status_badge', 'total_fee'
     ]
     list_filter = ['status', 'appointment_type', 'location_type', 'appointment_date']
@@ -154,7 +60,7 @@ class PersonalAppointmentAdmin(admin.ModelAdmin):
             'fields': ('patient', 'provider')
         }),
         ('Appointment Details', {
-            'fields': ('appointment_type', 'appointment_date', 'appointment_time', 'duration_minutes')
+            'fields': ('appointment_type', 'appointment_date', 'appointment_time', 'duration_minutes', 'patient_phone')
         }),
         ('Location', {
             'fields': ('location_type', 'location_address', 'video_link')
@@ -229,6 +135,93 @@ class PersonalAppointmentAdmin(admin.ModelAdmin):
         )
         self.message_user(request, f'{count} appointment(s) cancelled.')
     mark_as_cancelled.short_description = 'Cancel selected appointments'
+
+
+@admin.register(ServiceBooking)
+class ServiceBookingAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'patient_name', 'provider_name', 'service', 
+        'appointment_date', 'appointment_time', 'status_badge', 'service_price', 'final_price', 'total_amount'
+    ]
+    list_filter = ['status', 'appointment_date', 'created_at']
+    search_fields = [
+        'patient__email', 'patient__first_name', 'patient__last_name',
+        'provider__first_name', 'provider__last_name', 'service__name'
+    ]
+    ordering = ['-appointment_date', '-appointment_time']
+    readonly_fields = ['created_at', 'updated_at', 'confirmed_at', 'completed_at']
+    raw_id_fields = ['patient', 'provider', 'service']
+    
+    fieldsets = (
+        ('Service Booking Details', {
+            'fields': ('patient', 'provider', 'service', 'status')
+        }),
+        ('Schedule', {
+            'fields': ('appointment_date', 'appointment_time', 'duration_hours', 'service_address')
+        }),
+        ('Pricing', {
+            'fields': ('service_price', 'final_price', 'additional_charges', 'total_amount')
+        }),
+        ('Notes', {
+            'fields': ('patient_notes', 'provider_notes', 'cancellation_reason')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'confirmed_at', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def patient_name(self, obj):
+        return obj.patient.get_full_name()
+    patient_name.short_description = 'Patient'
+    
+    def provider_name(self, obj):
+        return obj.provider.get_full_name() if obj.provider else 'Unassigned'
+    provider_name.short_description = 'Provider'
+    
+    def status_badge(self, obj):
+        colors = {
+            'pending': '#FF9500',
+            'confirmed': '#007AFF',
+            'in_progress': '#5856D6',
+            'completed': '#34C759',
+            'cancelled': '#8E8E93',
+            'rejected': '#FF3B30',
+        }
+        color = colors.get(obj.status, '#8E8E93')
+        return format_html(
+            '<span style="background: {}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">{}</span>',
+            color,
+            obj.get_status_display()
+        )
+    status_badge.short_description = 'Status'
+    
+    actions = ['mark_as_confirmed', 'mark_as_completed', 'mark_as_cancelled']
+    
+    def mark_as_confirmed(self, request, queryset):
+        from django.utils import timezone
+        count = queryset.filter(status='pending').update(
+            status='confirmed',
+            confirmed_at=timezone.now()
+        )
+        self.message_user(request, f'{count} service booking(s) marked as confirmed.')
+    mark_as_confirmed.short_description = 'Mark selected as Confirmed'
+    
+    def mark_as_completed(self, request, queryset):
+        from django.utils import timezone
+        count = queryset.filter(status__in=['confirmed', 'in_progress']).update(
+            status='completed',
+            completed_at=timezone.now()
+        )
+        self.message_user(request, f'{count} service booking(s) marked as completed.')
+    mark_as_completed.short_description = 'Mark selected as Completed'
+    
+    def mark_as_cancelled(self, request, queryset):
+        count = queryset.exclude(status__in=['completed']).update(
+            status='cancelled'
+        )
+        self.message_user(request, f'{count} service booking(s) cancelled.')
+    mark_as_cancelled.short_description = 'Cancel selected service bookings'
 
     def save_model(self, request, obj, form, change):
         if change:

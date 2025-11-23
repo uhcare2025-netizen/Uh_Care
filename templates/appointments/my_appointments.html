@@ -1,104 +1,566 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}My Appointments - UH Care{% endblock %}
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+{% block extra_css %}
+<style>
+  :root {
+    --uh-blue: #004a99;
+    --uh-blue-dark: #002d6b;
+    --uh-green: #009e4d;
+    --uh-green-dark: #007a3d;
+    --uh-red: #E60000;
+    --uh-yellow: #f59e0b;
+    --uh-blue-light: #e0f2ff;
+    --uh-green-light: #e6fff0;
+    --uh-yellow-light: #fffbeb;
+    --light-bg: #f8fafc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+    --card-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  body {
+    background-color: var(--light-bg);
+  }
+
+  /* Hero Header */
+  .appointments-hero {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    padding: 3.5rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 220px;
+    box-shadow: 0 10px 30px rgba(0, 74, 153, 0.2);
+  }
+
+  .hero-video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .appointments-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50px;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+  }
+
+  .appointments-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+  }
+
+  .appointments-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .appointments-hero h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .appointments-hero p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+
+  /* Filter Tabs */
+  .filter-container {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filter-tab {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f0f0f0;
+    color: var(--text-secondary);
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .filter-tab:hover {
+    background: #e0e0e0;
+  }
+
+  .filter-tab.active {
+    background: var(--uh-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 74, 153, 0.2);
+  }
+
+  /* Appointment Card */
+  .appointment-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 5px solid var(--uh-blue);
+  }
+
+  .appointment-card:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .appointment-card-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2rem;
+    padding: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .appointment-card-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  .appointment-date-block {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--uh-blue-light) 0%, #c7e0ff 100%);
+    border-radius: 12px;
+    min-width: 120px;
+  }
+
+  .appointment-date-day {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--uh-blue-dark);
+    line-height: 1;
+  }
+
+  .appointment-date-month {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--uh-blue);
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .appointment-date-time {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 0.75rem;
+  }
+
+  .appointment-details h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+  }
+
+  .appointment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+
+  .appointment-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .appointment-meta-item svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .appointment-location {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-top: 0.75rem;
+  }
+
+  .appointment-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+  }
+
+  .status-pending {
+    background: var(--uh-yellow-light);
+    color: #9d5d00;
+  }
+
+  .status-confirmed {
+    background: var(--uh-blue-light);
+    color: var(--uh-blue-dark);
+  }
+
+  .status-completed {
+    background: var(--uh-green-light);
+    color: var(--uh-green-dark);
+  }
+
+  .status-cancelled {
+    background: #fee;
+    color: var(--uh-red);
+  }
+
+  .action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .action-btn-primary {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+  }
+
+  .action-btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .action-btn-danger {
+    background: linear-gradient(135deg, var(--uh-red) 0%, #b30000 100%);
+    color: white;
+  }
+
+  .action-btn-danger:hover {
+    box-shadow: 0 6px 16px rgba(230, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Empty State */
+  .empty-state {
+    background: white;
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+  }
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.5rem;
+    color: #d1d5db;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .cta-btn:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Stats Row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    border-left: 4px solid var(--uh-blue);
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-uh-blue-700">My Appointments</h1>
-        <p class="text-lg text-gray-600 mt-2">View and manage all your appointments</p>
+    <!-- Hero Header -->
+    <div class="appointments-hero">
+        <video class="hero-video-background" autoplay muted loop>
+          <source src="{% static 'videos/Back-ground.mp4' %}" type="video/mp4">
+        </video>
+        <div class="appointments-hero-content">
+            <div>
+                <h1>My Services</h1>
+                <p>View and manage all your booked services</p>
+            </div>
+            <div style="position: relative; z-index: 2;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 5rem; height: 5rem; opacity: 0.3;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+            </div>
+        </div>
     </div>
 
-    <!-- Branded Filter Tabs -->
-    <div class="flex flex-wrap border-b border-gray-300 mb-8">
-        <a href="?status=all" class="py-3 px-5 font-medium border-b-2 -mb-px transition-all duration-200 {% if status_filter == 'all' or not status_filter %}text-uh-blue-700 border-uh-blue-700{% else %}text-gray-600 hover:text-uh-blue-700 border-transparent{% endif %}">All</a>
-        <a href="?status=pending" class="py-3 px-5 font-medium border-b-2 -mb-px transition-all duration-200 {% if status_filter == 'pending' %}text-uh-blue-700 border-uh-blue-700{% else %}text-gray-600 hover:text-uh-blue-700 border-transparent{% endif %}">Pending</a>
-        <a href="?status=confirmed" class="py-3 px-5 font-medium border-b-2 -mb-px transition-all duration-200 {% if status_filter == 'confirmed' %}text-uh-blue-700 border-uh-blue-700{% else %}text-gray-600 hover:text-uh-blue-700 border-transparent{% endif %}">Confirmed</a>
-        <a href="?status=completed" class="py-3 px-5 font-medium border-b-2 -mb-px transition-all duration-200 {% if status_filter == 'completed' %}text-uh-blue-700 border-uh-blue-700{% else %}text-gray-600 hover:text-uh-blue-700 border-transparent{% endif %}">Completed</a>
-        <a href="?status=cancelled" class="py-3 px-5 font-medium border-b-2 -mb-px transition-all duration-200 {% if status_filter == 'cancelled' %}text-uh-blue-700 border-uh-blue-700{% else %}text-gray-600 hover:text-uh-blue-700 border-transparent{% endif %}">Cancelled</a>
+    <!-- Filter Tabs -->
+    <div class="filter-container">
+        <div class="filter-tabs">
+            <a href="?status=all" class="filter-tab {% if status_filter == 'all' or not status_filter %}active{% endif %}">All</a>
+            <a href="?status=pending" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+            <a href="?status=confirmed" class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+            <a href="?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">Completed</a>
+            <a href="?status=cancelled" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+        </div>
     </div>
 
     {% if appointments %}
-    <div class="space-y-6">
+    <div class="space-y-4">
         {% for appointment in appointments %}
         <!-- Appointment Card -->
-        <article class="bg-white rounded-lg shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-start gap-6 p-6 sm:p-8">
-            <!-- Date Block -->
-            <div class="text-center p-4 bg-uh-blue-100 rounded-lg w-full md:w-28">
-                <div class="text-4xl font-bold text-uh-blue-700 leading-none">{{ appointment.appointment_date|date:"d" }}</div>
-                <div class="text-sm font-medium text-uh-blue-600 uppercase mt-1">{{ appointment.appointment_date|date:"M Y" }}</div>
-                <div class="text-base font-semibold text-gray-800 mt-2">{{ appointment.appointment_time|time:"g:i A" }}</div>
-            </div>
+        <article class="appointment-card">
+            <div class="appointment-card-content">
+                <!-- Date Block -->
+                <div class="appointment-date-block">
+                    <div class="appointment-date-day">{{ appointment.appointment_date|date:"d" }}</div>
+                    <div class="appointment-date-month">{{ appointment.appointment_date|date:"M Y" }}</div>
+                    <div class="appointment-date-time">{{ appointment.appointment_time|time:"g:i A" }}</div>
+                </div>
 
-            <!-- Details -->
-            <div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ appointment.service.name }}</h3>
-                <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-gray-600 text-sm mb-3">
-                    <span class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75"/></svg>
-                        {{ appointment.service.category.name }}
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        {{ appointment.duration_hours }} hour(s)
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101"/></svg>
-                        <strong>रू {{ appointment.total_amount }}</strong>
-                    </span>
+                <!-- Details -->
+                <div class="appointment-details">
+                    <h3>{{ appointment.service.name }}</h3>
+                    <div class="appointment-meta">
+                        <div class="appointment-meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.458 3.83a3.461 3.461 0 0 0 2.537.856h5.41a3.461 3.461 0 0 0 2.537-.856c1.335-.836 2.458-2.23 2.458-3.83V8.75A2.25 2.25 0 0 0 15.75 6.5h-7.5A2.25 2.25 0 0 0 6 8.25v7.5z" />
+                            </svg>
+                            <span>{{ appointment.service.category.name }}</span>
+                        </div>
+                        <div class="appointment-meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{ appointment.duration_hours }} hour(s)</span>
+                        </div>
+                        <div class="appointment-meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <strong>रू {{ appointment.total_amount }}</strong>
+                        </div>
+                    </div>
                     {% if appointment.provider %}
-                    <span class="flex items-center gap-1.5">
-                        {% if appointment.provider and appointment.provider.profile_image %}
-                            <img src="{{ appointment.provider.profile_image.url|default:appointment.provider.profile_image }}" alt="{{ appointment.provider.get_full_name }}" class="h-6 w-6 rounded-full object-cover mr-2 inline-block" />
-                        {% else %}
-                            <img src="{% static 'images/avatar-placeholder.svg' %}" alt="{{ appointment.provider.get_full_name }}" class="h-6 w-6 rounded-full object-cover mr-2 inline-block" />
-                        {% endif %}
-                        <span class="font-medium text-gray-700">{{ appointment.provider.get_full_name }}</span>
-                    </span>
+                    <div class="appointment-meta">
+                        <div class="appointment-meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15a7.488 7.488 0 0 0-5.982 3.725m11.964 0a9 9 0 1 0-11.964 0m11.964 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275m11.964 0A24.973 24.973 0 0 1 12 21c-7.732 0-14.458-3.172-19.261-8.233" />
+                            </svg>
+                            <span class="font-medium">{{ appointment.provider.get_full_name }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="appointment-location">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                        </svg>
+                        <span>{{ appointment.service_address|truncatewords:20 }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions & Status -->
+                <div class="appointment-actions">
+                    <span class="status-badge status-{% if appointment.status == 'pending' %}pending{% elif appointment.status == 'confirmed' %}confirmed{% elif appointment.status == 'completed' %}completed{% elif appointment.status == 'cancelled' or appointment.status == 'rejected' %}cancelled{% endif %}">{{ appointment.get_status_display }}</span>
+                    <a href="{% url 'appointments:detail' appointment.id %}" class="action-btn action-btn-primary">View Details</a>
+                      {% if appointment.status == 'pending' %}
+                    <form method="post" action="{% url 'appointments:cancel' appointment.id %}" class="inline-block m-0 p-0" style="display:inline-block;">
+                        {% csrf_token %}
+                        <input type="hidden" name="reason" value="">
+                        <button type="submit" class="action-btn action-btn-danger open-cancel-modal" data-action-url="{% url 'appointments:cancel' appointment.id %}" data-appt-title="{{ appointment.service.name }} on {{ appointment.appointment_date|date:'M d' }}">Cancel</button>
+                    </form>
                     {% endif %}
                 </div>
-                <div class="text-sm text-gray-600 flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    {{ appointment.service_address|truncatewords:15 }}
-                </div>
-            </div>
-
-            <!-- Actions & Status -->
-            <div class="flex flex-col items-start md:items-end gap-3 w-full md:w-auto">
-                <span class="py-1 px-4 rounded-full text-xs font-semibold whitespace-nowrap {% if appointment.status == 'pending' %}bg-yellow-100 text-yellow-800{% elif appointment.status == 'confirmed' %}bg-uh-blue-100 text-uh-blue-700{% elif appointment.status == 'completed' %}bg-uh-green-100 text-uh-green-600{% elif appointment.status == 'cancelled' or appointment.status == 'rejected' %}bg-uh-red-100 text-uh-red-600{% else %}bg-gray-100 text-gray-800{% endif %}">{{ appointment.get_status_display }}</span>
-                <a href="{% url 'appointments:detail' appointment.id %}" class="w-full md:w-auto text-center bg-uh-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200">View Details</a>
-                {% if appointment.status == 'pending' or appointment.status == 'confirmed' and user.role == 'patient' %}
-                <button type="button" class="btn btn-danger open-cancel-modal w-full md:w-auto text-center bg-uh-red-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:bg-uh-red-500 focus:outline-none focus:ring-2 focus:ring-uh-red-600 focus:ring-offset-2 transition-all duration-200" data-action-url="{% url 'appointments:cancel' appointment.id %}" data-appt-title="{{ appointment.service.name }} on {{ appointment.appointment_date|date:'M d' }}">Cancel</button>
-                {% endif %}
             </div>
         </article>
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-center p-12 bg-white rounded-lg shadow-xl">
-        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5"/></svg>
-        <h3 class="text-2xl font-semibold text-gray-800 mb-2">No appointments found</h3>
-        <p class="text-gray-600 mb-6">You don't have any {{ status_filter }} appointments yet</p>
-        <a href="{% url 'services:list' %}" class="inline-block bg-uh-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200">Browse Services</a>
+    <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="empty-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+        </svg>
+        <h3 class="empty-title">No services found</h3>
+        <p class="empty-text">You don't have any {% if status_filter != 'all' %}{{ status_filter }}{% endif %} services yet</p>
+        <a href="{% url 'services:list' %}" class="cta-btn">Browse Services</a>
     </div>
     {% endif %}
 </div>
 {% endblock %}
 
+<!-- Cancel Modal (inserted so JS can control it) -->
+<div id="cancel-modal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4" role="document">
+    <div class="flex justify-between items-center p-5 border-b">
+      <h3 class="text-lg font-semibold text-gray-900" id="modal-title">Confirm Cancellation</h3>
+      <button type="button" class="text-gray-400 hover:text-gray-600 close-cancel-btn" id="cancel-modal-close">
+        <span class="sr-only">Close</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <form id="cancel-form" method="post">
+      {% csrf_token %}
+      <div class="p-5">
+        <p id="cancel-modal-desc" class="text-sm text-gray-700 mb-4">You are cancelling this service booking. This action cannot be undone.</p>
+        <label for="cancellation_reason" class="block text-sm font-medium text-gray-700">Reason (required)</label>
+        <div class="mt-1">
+          <textarea id="cancellation_reason" name="reason" rows="3" class="w-full border border-gray-300 rounded-md p-2" required></textarea>
+          <p id="cancel-error" style="display:none;color:#b91c1c;margin-top:0.5rem;font-size:0.9rem;"></p>
+        </div>
+      </div>
+      <div class="flex justify-end p-4 border-t">
+        <button type="button" class="mr-3 px-4 py-2 bg-white text-gray-700 rounded-md border close-cancel-btn">Close</button>
+        <button type="submit" class="px-4 py-2 bg-uh-red-600 text-white rounded-md">Confirm Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% block extra_js %}
 <script>
+// Delegated handler: intercept any clicks on elements with .open-cancel-modal
+// This runs outside DOMContentLoaded so it catches the event before form submit.
+document.addEventListener('click', function(e){
+  try {
+    var btn = e.target.closest && e.target.closest('.open-cancel-modal');
+    if (!btn) return;
+    // Prevent native form submit and open modal
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    var url = btn.getAttribute('data-action-url');
+    var title = btn.getAttribute('data-appt-title') || 'this service booking';
+    console.log('[delegated] open-cancel-modal clicked', url, title);
+    var modal = document.getElementById('cancel-modal');
+    var cancelForm = document.getElementById('cancel-form');
+    var modalDesc = document.getElementById('cancel-modal-desc');
+    if (!modal || !cancelForm) { console.warn('Cancel modal or form not found'); return; }
+    cancelForm.action = url;
+    if (modalDesc) modalDesc.textContent = 'You are cancelling the service booking: ' + title + '. This action cannot be undone.';
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+    var textarea = document.getElementById('cancellation_reason'); if (textarea) textarea.focus();
+  } catch(err) { console.error('delegated cancel handler error', err); }
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('cancel-modal');
     const cancelForm = document.getElementById('cancel-form');
     const modalDesc = document.getElementById('cancel-modal-desc');
-    const closeBtn = document.getElementById('cancel-modal-close');
+  const closeBtn = document.getElementById('cancel-modal-close');
+  const closeBtns = document.querySelectorAll('.close-cancel-btn');
 
     function openModal(actionUrl, title) {
         if (!cancelForm || !modal) return;
         cancelForm.action = actionUrl;
-        modalDesc.textContent = 'You are cancelling the appointment: ' + title + '. This action cannot be undone.';
+      modalDesc.textContent = 'You are cancelling the service booking: ' + title + '. This action cannot be undone.';
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         const textarea = document.getElementById('cancellation_reason');
@@ -106,26 +568,77 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function closeModal() {
-        if (!cancelForm || !modal) return;
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        cancelForm.action = '';
-        const textarea = document.getElementById('cancellation_reason');
-        if (textarea) textarea.value = '';
+      if (!cancelForm || !modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      cancelForm.action = '';
+      const textarea = document.getElementById('cancellation_reason');
+      const err = document.getElementById('cancel-error');
+      if (textarea) textarea.value = '';
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
     }
 
+    // Attach click handler to buttons and a submit handler to the parent form as a fallback
     document.querySelectorAll('.open-cancel-modal').forEach(function(btn){
+      try {
+        // Click handler (primary)
         btn.addEventListener('click', function(e){
-            const url = btn.getAttribute('data-action-url');
-            const title = btn.getAttribute('data-appt-title') || 'this appointment';
-            openModal(url, title);
+          // Prevent the default form submit if JS is available — open modal instead.
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          const url = btn.getAttribute('data-action-url');
+          const title = btn.getAttribute('data-appt-title') || 'this service booking';
+          console.log('open-cancel-modal clicked', url, title);
+          openModal(url, title);
         });
+
+        // Also add a submit listener on the parent form (in case the submit event fires before click handler)
+        const parentForm = btn.closest('form');
+        if (parentForm) {
+          parentForm.addEventListener('submit', function(e){
+            // If modal is already open, let it submit; otherwise open modal and prevent submit
+            if (!modal || modal.classList.contains('hidden')) {
+              e.preventDefault();
+              const url = btn.getAttribute('data-action-url');
+              const title = btn.getAttribute('data-appt-title') || 'this service booking';
+              console.log('cancel form submit intercepted, opening modal', url);
+              openModal(url, title);
+              return false;
+            }
+            return true;
+          });
+        }
+      } catch (err) {
+        console.error('Error attaching cancel handlers', err);
+      }
     });
 
+    // Client-side validation on submit: require cancellation reason
+    const cancelError = document.getElementById('cancel-error');
+    if (cancelForm) {
+      cancelForm.addEventListener('submit', function(e){
+        const reasonEl = document.getElementById('cancellation_reason');
+        const reason = reasonEl ? reasonEl.value.trim() : '';
+        if (!reason) {
+          e.preventDefault();
+          if (cancelError) {
+            cancelError.textContent = 'Please provide a reason for cancellation.';
+            cancelError.style.display = 'block';
+          }
+          if (reasonEl) reasonEl.focus();
+          return false;
+        }
+        // allow submit
+        return true;
+      });
+    }
+
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (closeBtns && closeBtns.length) {
+      closeBtns.forEach(function(b){ b.addEventListener('click', closeModal); });
+    }
 
     if (modal) {
-        modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
+      modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
     }
 });
 </script>

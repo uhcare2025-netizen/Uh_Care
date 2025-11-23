@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 from decimal import Decimal
 
 from apps.accounts.models import User, PatientProfile, ProviderProfile
-from apps.appointments.models import Appointment, PersonalAppointment
+from apps.appointments.models import ServiceBooking, PersonalAppointment
 from apps.payments.models import Payment
 from apps.services.models import Service
 from apps.services.wishlist import Wishlist
@@ -59,30 +59,29 @@ def patient_dashboard(request):
     today = timezone.now().date()
     this_month_start = today.replace(day=1)
     
-    # Upcoming appointments
-    upcoming_appointments = Appointment.objects.filter(
+    # Upcoming marketplace service bookings
+    upcoming_appointments = ServiceBooking.objects.filter(
         patient=user,
         appointment_date__gte=today,
         status__in=['pending', 'confirmed']
     ).select_related('service', 'provider').order_by('appointment_date', 'appointment_time')[:5]
     
-    # Recent appointments
-    recent_appointments = Appointment.objects.filter(
-        patient=user,
-        appointment_date__lt=today
+    # Recent marketplace service bookings
+    recent_appointments = ServiceBooking.objects.filter(
+        patient=user
     ).select_related('service', 'provider').order_by('-appointment_date', '-appointment_time')[:5]
     
-    # Appointment statistics
-    total_appointments = Appointment.objects.filter(patient=user).count()
-    completed_appointments = Appointment.objects.filter(
+    # Marketplace booking statistics
+    total_appointments = ServiceBooking.objects.filter(patient=user).count()
+    completed_appointments = ServiceBooking.objects.filter(
         patient=user, 
         status='completed'
     ).count()
-    pending_appointments = Appointment.objects.filter(
+    pending_appointments = ServiceBooking.objects.filter(
         patient=user,
         status='pending'
     ).count()
-    cancelled_appointments = Appointment.objects.filter(
+    cancelled_appointments = ServiceBooking.objects.filter(
         patient=user,
         status='cancelled'
     ).count()
@@ -104,10 +103,10 @@ def patient_dashboard(request):
         payment_date__gte=this_month_start
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     
-    # Recent payments
+    # Recent payments (include both legacy appointment and new service_booking links)
     recent_payments = Payment.objects.filter(
         patient=user
-    ).select_related('appointment').order_by('-created_at')[:5]
+    ).select_related('appointment', 'service_booking').order_by('-created_at')[:5]
 
     # Recent equipment orders
     recent_purchases = EquipmentPurchase.objects.filter(customer=user).select_related('equipment').order_by('-created_at')[:5]
@@ -153,10 +152,12 @@ def patient_dashboard(request):
         'equipment_purchases_count': EquipmentPurchase.objects.filter(customer=user).count(),
         'equipment_rentals_count': EquipmentRental.objects.filter(customer=user).count(),
         'personal_appointments_count': PersonalAppointment.objects.filter(patient=user).count(),
+        'prescriptions_count': PharmacyOrder.objects.filter(customer=user).count(),
+        'outstanding_amount': Decimal('0.00'),
     }
 
     # Compute gross obligation from domain records (same approach as patient_balance)
-    appointments_total = Appointment.objects.filter(patient=user).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    appointments_total = ServiceBooking.objects.filter(patient=user).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     personal_appointments_total = PersonalAppointment.objects.filter(patient=user).aggregate(total=Sum('total_fee'))['total'] or Decimal('0.00')
     pharmacy_total = PharmacyOrder.objects.filter(customer=user).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     equipment_purchases_total = EquipmentPurchase.objects.filter(customer=user).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
@@ -198,7 +199,7 @@ def patient_dashboard(request):
             Q(payment_proof_file__isnull=False) | ~Q(transaction_id='') | ~Q(payment_proof_url='')
         )
     ).exclude(
-        Q(appointment__status='cancelled') |
+        Q(appointment__status='cancelled') | Q(service_booking__status='cancelled') |
         Q(pharmacy_order__status='cancelled') |
         Q(equipment_purchase__status='cancelled') |
         Q(equipment_rental__status='cancelled')
@@ -214,6 +215,7 @@ def patient_dashboard(request):
     stats['gross_total'] = gross_total
     stats['paid_amount'] = total_paid
     stats['current_balance'] = net_unpaid
+    stats['outstanding_amount'] = net_unpaid
     # keep a separate actionable unpaid amount (excludes cash commitments and
     # online-pending) for the 'pending' label — this is still useful as a
     # measure of immediately payable amount in the quick card.
@@ -295,7 +297,7 @@ def patient_balance(request):
     # --- Additional aggregate: Gross obligation from domain records ---
     # Sum charges from services (appointments), pharmacy orders, equipment purchases and rentals.
     # Exclude cancelled domain records when computing gross obligation
-    appointments_total = Appointment.objects.filter(patient=user).exclude(status='cancelled').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    appointments_total = ServiceBooking.objects.filter(patient=user).exclude(status='cancelled').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     # PersonalAppointment uses `total_fee` as the computed amount. Personal
     # appointments have multiple cancel statuses; exclude any that start with
     # 'cancel' to be safe.
@@ -387,53 +389,53 @@ def provider_dashboard(request):
     this_week_start = today - timedelta(days=today.weekday())
     this_month_start = today.replace(day=1)
     
-    # Today's appointments
-    todays_appointments = Appointment.objects.filter(
+    # Today's marketplace service bookings
+    todays_appointments = ServiceBooking.objects.filter(
         provider=user,
         appointment_date=today
     ).select_related('service', 'patient').order_by('appointment_time')
     
-    # Upcoming appointments
-    upcoming_appointments = Appointment.objects.filter(
+    # Upcoming marketplace service bookings
+    upcoming_appointments = ServiceBooking.objects.filter(
         provider=user,
         appointment_date__gt=today,
         status__in=['confirmed', 'in_progress']
     ).select_related('service', 'patient').order_by('appointment_date', 'appointment_time')[:10]
     
-    # Pending requests (unassigned appointments matching provider specialization)
-    pending_requests = Appointment.objects.filter(
+    # Pending marketplace service requests (unassigned bookings matching provider specialization)
+    pending_requests = ServiceBooking.objects.filter(
         status='pending',
         provider__isnull=True,
         service__category__name__icontains=profile.get_specialization_display()
     ).select_related('service', 'patient').order_by('appointment_date', 'appointment_time')[:5]
     
     # Statistics
-    total_appointments = Appointment.objects.filter(provider=user).count()
-    completed_appointments = Appointment.objects.filter(
+    total_appointments = ServiceBooking.objects.filter(provider=user).count()
+    completed_appointments = ServiceBooking.objects.filter(
         provider=user,
         status='completed'
     ).count()
     
-    this_week_appointments = Appointment.objects.filter(
+    this_week_appointments = ServiceBooking.objects.filter(
         provider=user,
         appointment_date__gte=this_week_start,
         appointment_date__lte=today
     ).count()
     
-    this_month_appointments = Appointment.objects.filter(
+    this_month_appointments = ServiceBooking.objects.filter(
         provider=user,
         appointment_date__gte=this_month_start
     ).count()
     
     # Earnings calculation
-    total_hours = Appointment.objects.filter(
+    total_hours = ServiceBooking.objects.filter(
         provider=user,
         status='completed'
     ).aggregate(total=Sum('duration_hours'))['total'] or Decimal('0')
     
     estimated_earnings = total_hours * profile.hourly_rate
     
-    this_month_hours = Appointment.objects.filter(
+    this_month_hours = ServiceBooking.objects.filter(
         provider=user,
         status='completed',
         appointment_date__gte=this_month_start
@@ -475,7 +477,7 @@ def provider_dashboard(request):
     # Activity scoped strictly to patients who booked with this provider.
     # Do NOT fallback to site-wide activity for providers; if there are no
     # patients, show empty lists so the provider sees only related activity.
-    recent_patient_ids = list(Appointment.objects.filter(provider=user).values_list('patient', flat=True).distinct())
+    recent_patient_ids = list(ServiceBooking.objects.filter(provider=user).values_list('patient', flat=True).distinct())
     scoped_activity = bool(recent_patient_ids)
 
     if scoped_activity:
@@ -486,8 +488,8 @@ def provider_dashboard(request):
         recent_pharmacy_activities = PharmacyOrderActivity.objects.filter(order__customer__in=recent_patient_ids).select_related('order', 'actor').order_by('-created_at')[:8]
 
         recent_payments = Payment.objects.filter(
-            Q(patient__in=recent_patient_ids) | Q(appointment__provider=user)
-        ).select_related('appointment', 'pharmacy_order', 'equipment_purchase', 'equipment_rental', 'patient').order_by('-created_at')[:8]
+            Q(patient__in=recent_patient_ids) | Q(appointment__provider=user) | Q(service_booking__provider=user)
+        ).select_related('appointment', 'service_booking', 'pharmacy_order', 'equipment_purchase', 'equipment_rental', 'patient').order_by('-created_at')[:8]
     else:
         # No patients for this provider yet — present empty querysets (no site-wide fallback)
         recent_purchases = EquipmentPurchase.objects.none()
@@ -495,6 +497,15 @@ def provider_dashboard(request):
         recent_pharmacy_orders = PharmacyOrder.objects.none()
         recent_pharmacy_activities = PharmacyOrderActivity.objects.none()
         recent_payments = Payment.objects.none()
+
+    # Additionally, include provider's own recent orders/payments so providers
+    # can see equipment/pharmacy activity they initiated themselves.
+    provider_recent_purchases = EquipmentPurchase.objects.filter(customer=user).select_related('equipment').order_by('-created_at')[:6]
+    provider_recent_rentals = EquipmentRental.objects.filter(customer=user).select_related('equipment').order_by('-created_at')[:6]
+    provider_recent_pharmacy_orders = PharmacyOrder.objects.filter(customer=user).order_by('-created_at')[:6]
+    provider_recent_payments = Payment.objects.filter(
+        patient=user
+    ).select_related('appointment', 'service_booking', 'pharmacy_order', 'equipment_purchase', 'equipment_rental').order_by('-created_at')[:8]
 
     # Merge into context so the provider dashboard template can render activity lists.
     context.update({
@@ -504,6 +515,10 @@ def provider_dashboard(request):
         'recent_pharmacy_activities': recent_pharmacy_activities,
         'recent_payments': recent_payments,
         'recent_activity_scoped': scoped_activity,
+        'provider_recent_purchases': provider_recent_purchases,
+        'provider_recent_rentals': provider_recent_rentals,
+        'provider_recent_pharmacy_orders': provider_recent_pharmacy_orders,
+        'provider_recent_payments': provider_recent_payments,
     })
     
     return render(request, 'dashboard/provider_dashboard.html', context)
@@ -524,8 +539,8 @@ def provider_schedule(request):
     month = int(request.GET.get('month', current_date.month))
     year = int(request.GET.get('year', current_date.year))
     
-    # Get appointments for the selected month
-    appointments = Appointment.objects.filter(
+    # Get marketplace service bookings for the selected month
+    appointments = ServiceBooking.objects.filter(
         provider=user,
         appointment_date__year=year,
         appointment_date__month=month
@@ -558,14 +573,14 @@ def admin_dashboard(request):
     total_providers = User.objects.filter(role='provider', is_active=True).count()
     pending_providers = User.objects.filter(role='provider', is_active=False).count()
     
-    # Appointment statistics
-    total_appointments = Appointment.objects.count()
-    this_month_appointments = Appointment.objects.filter(
+    # Marketplace booking statistics
+    total_appointments = ServiceBooking.objects.count()
+    this_month_appointments = ServiceBooking.objects.filter(
         created_at__gte=this_month_start
     ).count()
     
-    pending_appointments = Appointment.objects.filter(status='pending').count()
-    completed_appointments = Appointment.objects.filter(status='completed').count()
+    pending_appointments = ServiceBooking.objects.filter(status='pending').count()
+    completed_appointments = ServiceBooking.objects.filter(status='completed').count()
     
     # Financial statistics
     total_revenue = Payment.objects.filter(
@@ -588,12 +603,12 @@ def admin_dashboard(request):
     ).order_by('-total_bookings')[:5]
     
     # Recent activity
-    recent_appointments = Appointment.objects.select_related(
+    recent_appointments = ServiceBooking.objects.select_related(
         'patient', 'provider', 'service'
     ).order_by('-created_at')[:10]
     
     recent_payments = Payment.objects.select_related(
-        'patient', 'appointment'
+        'patient', 'appointment', 'service_booking'
     ).order_by('-created_at')[:10]
     
     stats = {

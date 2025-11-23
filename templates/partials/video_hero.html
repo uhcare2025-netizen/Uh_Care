@@ -1,79 +1,114 @@
 {% load static %}
 <style>
-.video-bg-wrap { position: relative; overflow: hidden; }
-.video-bg { width: 100%; height: 340px; object-fit: cover; display: block; }
-.video-bg-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.32), rgba(0,0,0,0.45)); }
-.video-bg-content { position: relative; z-index: 10; }
-@media (max-width: 640px) {
-  .video-bg { display: none; }
-  .video-bg-wrap { height: auto; }
-  .video-bg-content { padding: 3rem 0; }
-}
+    .video-hero {
+        position: relative;
+        overflow: hidden;
+        height: 400px;
+    }
+    
+    .video-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+    
+    .video-hero video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: 0;
+        object-fit: cover;
+    }
+    
+    .video-hero-content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: white;
+        padding: 2rem 1rem;
+    }
+    
+    .video-hero-content h1 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .video-hero-content p {
+        font-size: 1.125rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 48rem;
+        margin: 0 auto;
+    }
+    
+    @media (min-width: 640px) {
+        .video-hero-content h1 {
+            font-size: 3rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .video-hero {
+            height: 300px;
+        }
+        .video-hero video {
+            display: none;
+        }
+        .video-hero::before {
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
+        }
+        .video-hero-content {
+            color: #1e3a8a;
+        }
+        .video-hero-content p {
+            color: #4b5563;
+        }
+    }
 </style>
 
 <div class="video-hero">
-  <div class="video-bg-wrap" style="background-image: url('{{ poster_src }}'); background-size: cover; background-position: center;">
-    {% comment %} Allow caller to override video_path and poster_path; fall back to default Back-ground.mp4 and poster if not provided {% endcomment %}
     {% if video_path %}
-      {% static video_path as video_src %}
+        {% static video_path as video_src %}
     {% else %}
-      {% static 'videos/Back-ground.mp4' as video_src %}
+        {% static 'videos/Back-ground.mp4' as video_src %}
     {% endif %}
 
-    {% if poster_path %}
-      {% static poster_path as poster_src %}
-    {% else %}
-      {% static 'images/dashboard-bg-poster.jpg' as poster_src %}
-    {% endif %}
-
-    <video id="video-hero" class="video-bg" autoplay muted loop playsinline preload="auto" poster="{{ poster_src }}">
-      <source src="{{ video_src }}" type="video/mp4">
-      <!-- Fallback text -->
-      Your browser does not support the video tag.
+    <video autoplay muted loop playsinline>
+        <source src="{{ video_src }}" type="video/mp4">
+        Your browser does not support the video tag.
     </video>
-    <div class="video-bg-overlay" aria-hidden="true"></div>
+    
+    <div class="video-hero-content">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            {% if icon %}
+            <div class="w-16 h-16 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">{{ icon|safe }}</div>
+            {% endif %}
 
-    <!-- Play control (useful if autoplay is blocked) -->
-    <button id="video-play-btn" aria-label="Play background video" class="absolute right-6 top-6 z-20 bg-white/80 text-uh-blue-700 rounded-full p-2 shadow-sm hidden sm:inline-flex">▶</button>
+            <h1>{{ title }}</h1>
+            {% if subtitle %}
+            <p>{{ subtitle }}</p>
+            {% endif %}
 
-    <div class="video-bg-content text-center text-white py-16 sm:py-20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {% if icon %}
-        <div class="w-16 h-16 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">{{ icon|safe }}</div>
-        {% endif %}
-
-        <h1 class="text-4xl sm:text-5xl font-extrabold mb-4">{{ title }}</h1>
-        {% if subtitle %}
-        <p class="text-lg sm:text-xl text-blue-100 max-w-3xl mx-auto">{{ subtitle }}</p>
-        {% endif %}
-
-        {% if cta_text and cta_url %}
-        <div class="mt-6">
-          <a href="{{ cta_url }}" class="inline-block bg-white text-uh-blue-700 font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition">{{ cta_text }}</a>
+            {% if cta_text and cta_url %}
+            <div class="mt-6">
+                <a href="{{ cta_url }}" class="inline-block bg-white text-uh-blue-700 font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition">{{ cta_text }}</a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-      </div>
     </div>
-  </div>
-    <noscript>
-      <img src="{{ poster_src }}" alt="{{ title }}" class="w-full h-auto block" />
-    </noscript>
-
-    <script>
-      (function(){
-        try {
-          var vid = document.getElementById('video-hero');
-          var btn = document.getElementById('video-play-btn');
-          if(!vid || !btn) return;
-          // If video is already playing, hide button
-          var isPlaying = function(v){ return !!(v && v.currentTime > 0 && !v.paused && !v.ended && v.readyState > 2); };
-          if(isPlaying(vid)) { btn.style.display = 'none'; }
-          btn.addEventListener('click', function(e){
-            e.preventDefault();
-            if(vid.paused){ vid.muted = false; vid.play().catch(function(){ /* ignore */ }); btn.style.display='none'; }
-            else { vid.pause(); btn.textContent = '▶'; }
-          });
-        } catch (err) { /* fail silently */ }
-      })();
-    </script>
 </div>

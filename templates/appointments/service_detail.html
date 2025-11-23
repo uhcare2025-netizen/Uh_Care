@@ -32,7 +32,7 @@
                                     </div>
 
                                     <a href="{% url 'appointments:book' service.id %}" class="inline-flex items-center justify-center bg-white text-uh-blue-700 font-semibold py-3 px-5 rounded-lg shadow-lg hover:scale-[1.02] transition-transform">
-                                        Book Now
+                                        Book Service
                                     </a>
                                 </div>
                             </div>
@@ -143,7 +143,7 @@
                     <div class="flex flex-col gap-4">
                         {% if user.is_authenticated and user.role == 'patient' %}
                             <a href="{% url 'appointments:book' service.id %}" class="w-full text-center bg-uh-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200 text-lg">
-                                Book Appointment
+                                Book Service
                             </a>
                             
                             {% if in_wishlist %}

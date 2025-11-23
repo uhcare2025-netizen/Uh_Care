@@ -364,31 +364,65 @@
                         {% endfor %}
                     {% endif %}
 
+                    {# Top-level form error summary and per-field anchors #}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the following fields:</strong>
+                            <ul style="margin: .5rem 0 0 1.25rem; padding: 0;">
+                                {% for field in form %}
+                                    {% if field.errors %}
+                                        <li style="margin: 0.25rem 0;"><a href="#{{ field.id_for_label }}" style="color:inherit; text-decoration:underline;">{{ field.label }}</a>: {{ field.errors|first }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if form.non_field_errors %}
+                                    {% for err in form.non_field_errors %}
+                                        <li style="margin: 0.25rem 0;">{{ err }}</li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <div class="form-section">
                         <h2>Basic Information</h2>
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.first_name.id_for_label }}">First name</label>
                                 {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.first_name.errors|first }}</div>
+                                {% endif %}
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.last_name.id_for_label }}">Last name</label>
                                 {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.last_name.errors|first }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
                                 {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.email.errors|first }}</div>
+                                {% endif %}
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone</label>
                                 {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.phone_number.errors|first }}</div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ form.profile_image.id_for_label }}">Profile Photo</label>
                             {{ form.profile_image }}
+                            {% if form.profile_image.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.profile_image.errors|first }}</div>
+                            {% endif %}
                             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">Choose a square photo for best results. Preview will appear above.</p>
                         </div>
                     </div>
@@ -398,14 +432,23 @@
                         <div class="form-group">
                             <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of birth</label>
                             {{ form.date_of_birth }}
+                            {% if form.date_of_birth.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.date_of_birth.errors|first }}</div>
+                            {% endif %}
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ form.address.id_for_label }}">Address</label>
                             {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.address.errors|first }}</div>
+                            {% endif %}
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ form.emergency_contact.id_for_label }}">Emergency contact</label>
                             {{ form.emergency_contact }}
+                            {% if form.emergency_contact.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.emergency_contact.errors|first }}</div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -415,10 +458,16 @@
                         <div class="form-group">
                             <label class="form-label" for="{{ form.medical_history.id_for_label }}">Medical history</label>
                             {{ form.medical_history }}
+                            {% if form.medical_history.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.medical_history.errors|first }}</div>
+                            {% endif %}
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ form.blood_group.id_for_label }}">Blood group</label>
                             {{ form.blood_group }}
+                            {% if form.blood_group.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.blood_group.errors|first }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     {% elif user.role == 'provider' %}
@@ -427,14 +476,23 @@
                         <div class="form-group">
                             <label class="form-label" for="{{ form.specialization.id_for_label }}">Specialization</label>
                             {{ form.specialization }}
+                            {% if form.specialization.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.specialization.errors|first }}</div>
+                            {% endif %}
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ form.license_number.id_for_label }}">License number</label>
                             {{ form.license_number }}
+                            {% if form.license_number.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.license_number.errors|first }}</div>
+                            {% endif %}
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="{{ form.hourly_rate.id_for_label }}">Hourly rate (NPR)</label>
                             {{ form.hourly_rate }}
+                            {% if form.hourly_rate.errors %}
+                                <div class="alert alert-danger" style="margin-top:0.5rem;font-size:0.9rem;padding:0.5rem;">{{ form.hourly_rate.errors|first }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
@@ -488,6 +546,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
         img.onload = function () { URL.revokeObjectURL(url); };
     });
+
+    // Highlight fields that have inline error alerts so user can find them quickly
+    const fieldErrorAlerts = document.querySelectorAll('.profile-card .form-group .alert.alert-danger');
+    fieldErrorAlerts.forEach(function (alertEl) {
+        const group = alertEl.closest('.form-group');
+        if (!group) return;
+        const field = group.querySelector('input, select, textarea');
+        if (field) {
+            field.style.borderColor = '#c41c1c';
+            field.style.boxShadow = '0 0 0 3px rgba(196,28,28,0.06)';
+        }
+    });
+
+    // If the page contains a top-level error summary with anchors, optionally focus the first errored field
+    const firstFieldAnchor = document.querySelector('.alert.alert-danger a[href^="#"]');
+    if (firstFieldAnchor) {
+        const anchor = firstFieldAnchor.getAttribute('href');
+        try {
+            const target = document.querySelector(anchor);
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) {
+                target.focus();
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } catch (e) {
+            // ignore invalid anchors
+        }
+    }
 });
 </script>
 {% endblock %}

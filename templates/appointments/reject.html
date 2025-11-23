@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Reject Service Booking - UH Care{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-lg shadow border border-gray-200">
+        <div class="px-6 py-5 border-b">
+            <h1 class="text-xl font-semibold text-gray-900">Reject Service Booking</h1>
+            <p class="text-sm text-gray-600 mt-1">Provide a reason for rejecting this service booking.</p>
+        </div>
+
+        <div class="px-6 py-6">
+            <div class="space-y-4">
+                <div>
+                    <p class="text-sm text-gray-500">Reference</p>
+                    <p class="font-medium text-gray-900">#{{ appointment.id }}</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Service</p>
+                        <p class="font-medium text-gray-900">{{ appointment.service.name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Patient</p>
+                        <p class="font-medium text-gray-900">{% if appointment.patient %}{{ appointment.patient.get_full_name }}{% else %}—{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Date</p>
+                        <p class="font-medium text-gray-900">{{ appointment.appointment_date|date:'M d, Y' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Time</p>
+                        <p class="font-medium text-gray-900">{{ appointment.appointment_time|time:'g:i A' }}</p>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div>
+                        <label for="rejection_reason" class="block text-sm font-medium text-gray-700">Rejection reason</label>
+                        <textarea id="rejection_reason" name="rejection_reason" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-uh-blue-600" placeholder="e.g. Provider unavailable at requested time">Provider unavailable</textarea>
+                        <p class="text-xs text-gray-500 mt-1">This reason will be recorded and shown to the patient.</p>
+                    </div>
+
+                    <div class="mt-6 flex items-center gap-3">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-uh-red-600 text-white rounded-md hover:bg-uh-red-500">Reject Service Booking</button>
+                        <a href="{% url 'appointments:provider_pending' %}" class="text-sm text-gray-600 hover:underline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

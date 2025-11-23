@@ -98,9 +98,9 @@
                         <!-- Overlay CTA on hover -->
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200"></div>
                         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <div class="flex gap-3">
+                                <div class="flex gap-3">
                                 <a href="{% url 'services:detail' service.slug %}" class="service-cta secondary">View</a>
-                                <a href="{% url 'appointments:book' service.id %}" class="service-cta primary">Book</a>
+                                <a href="{% url 'appointments:book' service.id %}" class="service-cta primary">Book Service</a>
                             </div>
                         </div>
 
@@ -110,7 +110,12 @@
                     </div>
 
                     <div class="p-5">
-                        <span class="inline-block bg-uh-blue-100 text-uh-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">{{ service.category.name }}</span>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="inline-block bg-uh-blue-100 text-uh-blue-700 text-xs font-semibold px-3 py-1 rounded-full">{{ service.category.name }}</span>
+                            {% if service.requires_security_deposit %}
+                            <span class="inline-block bg-uh-green-100 text-uh-green-700 text-xs font-semibold px-2 py-1 rounded-full">Deposit: रु {{ service.security_deposit_amount|floatformat:0 }}</span>
+                            {% endif %}
+                        </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-2 truncate" title="{{ service.name }}">{{ service.name }}</h3>
 
                         <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ service.short_description|truncatewords:20 }}</p>

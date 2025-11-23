@@ -72,6 +72,7 @@ class ProviderProfile(models.Model):
         ('respiratory', 'Respiratory Care'),
         ('wound_care', 'Wound Care'),
         ('general', 'General Care'),
+        ('general_counciller', 'General counciller'),
     )
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='provider_profile')

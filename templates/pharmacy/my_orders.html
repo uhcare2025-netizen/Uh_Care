@@ -3,22 +3,386 @@
 
 {% block title %}My Orders - UH Care{% endblock %}
 
-{% block content %}
-<div classs="container" style="max-width:1100px; margin:2rem auto; padding:0 1rem;">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-uh-blue-700">My Orders</h1>
-        <a href="{% url 'pharmacy:list' %}" class="inline-block bg-white text-uh-blue-700 font-semibold py-2 px-5 border border-uh-blue-700 rounded-lg shadow-sm hover:bg-uh-blue-100 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200">
-            Browse medicines
-        </a>
-    </div>
+{% block extra_css %}
+<style>
+  :root {
+    --uh-blue: #004a99;
+    --uh-blue-dark: #002d6b;
+    --uh-green: #009e4d;
+    --uh-green-dark: #007a3d;
+    --uh-red: #E60000;
+    --uh-yellow: #f59e0b;
+    --uh-blue-light: #e0f2ff;
+    --uh-green-light: #e6fff0;
+    --uh-yellow-light: #fffbeb;
+    --light-bg: #f8fafc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+    --card-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
 
+  body {
+    background-color: var(--light-bg);
+  }
+
+  /* Hero Header */
+  .orders-hero {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    padding: 3.5rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 74, 153, 0.2);
+  }
+
+  .orders-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50px;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+  }
+
+  .orders-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+  }
+
+  .orders-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .orders-hero h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .orders-hero p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+
+  /* Filter Tabs */
+  .filter-container {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filter-tab {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f0f0f0;
+    color: var(--text-secondary);
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .filter-tab:hover {
+    background: #e0e0e0;
+  }
+
+  .filter-tab.active {
+    background: var(--uh-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 74, 153, 0.2);
+  }
+
+  /* Order Card */
+  .order-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 5px solid var(--uh-blue);
+  }
+
+  .order-card:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .order-card-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2rem;
+    padding: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .order-card-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  .order-image {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .order-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .order-details h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .order-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+
+  .order-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .order-meta-item svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .order-items {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .order-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Right-top meta in card (status + price) */
+  .order-right-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .order-right-meta {
+      flex-direction: column;
+      align-items: flex-end;
+    }
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+  }
+
+  .status-pending {
+    background: var(--uh-yellow-light);
+    color: #9d5d00;
+  }
+
+  .status-processing {
+    background: var(--uh-blue-light);
+    color: var(--uh-blue-dark);
+  }
+
+  .status-delivered {
+    background: var(--uh-green-light);
+    color: var(--uh-green-dark);
+  }
+
+  .status-completed {
+    background: var(--uh-green-light);
+    color: var(--uh-green-dark);
+  }
+
+  .status-cancelled {
+    background: #fee;
+    color: var(--uh-red);
+  }
+
+  .action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .action-btn-primary {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+  }
+
+  .action-btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .action-btn-danger {
+    background: linear-gradient(135deg, var(--uh-red) 0%, #b30000 100%);
+    color: white;
+  }
+
+  .action-btn-danger:hover {
+    box-shadow: 0 6px 16px rgba(230, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Empty State */
+  .empty-state {
+    background: white;
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+  }
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.5rem;
+    color: #d1d5db;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .cta-btn:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 153, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .price-tag {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--uh-green);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+  <!-- Hero Header -->
+  <div class="orders-hero">
+    <div class="orders-hero-content">
+      <div>
+        <h1>My Orders</h1>
+        <p>Track and manage your medicine orders</p>
+      </div>
+      <div style="position: relative; z-index: 2;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 5rem; height: 5rem; opacity: 0.3;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a2.25 2.25 0 01-2.25 2.25H5.25a2.25 2.25 0 01-2.25-2.25v-8.25M12 4.875A2.625 2.625 0 1012 10.125 2.625 2.625 0 0012 4.875zM12 15v.001M18 5.25v.001M6 5.25v.001" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-container">
+    <div class="filter-tabs">
+      <a href="?status=all" class="filter-tab {% if status_filter == 'all' or not status_filter %}active{% endif %}">All</a>
+      <a href="?status=pending" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+      <a href="?status=confirmed" class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+      <a href="?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">Completed</a>
+      <a href="?status=cancelled" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+    </div>
+  </div>
     {% if orders %}
     <div class="space-y-4">
         {% for order in orders %}
-        <article class="bg-white rounded-lg shadow-xl p-4 sm:p-5">
-            <div class="flex flex-col sm:flex-row gap-4">
+        <article class="order-card">
+          <div class="order-card-content">
                 <!-- Image -->
-                <div class="flex-shrink-0 w-full sm:w-24 h-24 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                <div class="order-image">
                     {% with first_item=order.items.all|first %}
                         {% if first_item and first_item.medicine.image %}
                             <img src="{{ first_item.medicine.image.url }}" alt="{{ first_item.medicine.name }}" class="w-full h-full object-cover rounded-md" />
@@ -34,14 +398,14 @@
                 </div>
                 
                 <!-- Order Details -->
-                <div class="flex-1 min-w-0">
+                <div class="order-details">
                     <!-- Top row: Title, Status, Price -->
                     <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-2">
                         <div class="min-w-0">
                             <h3 class="text-lg font-semibold text-gray-900 truncate">Order <strong>#{{ order.order_number }}</strong></h3>
                             <p class="text-sm text-gray-500">{{ order.created_at|date:"F d, Y" }} • {{ order.items.count }} item{{ order.items.count|pluralize }}</p>
                         </div>
-                        <div class="flex-shrink-0 flex sm:flex-col items-center sm:items-end gap-2">
+                        <div class="order-right-meta">
                             <!-- Branded Status Badge -->
                             <span class="text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap
                                 {% if order.status == 'completed' or order.status == 'delivered' %} bg-uh-green-100 text-uh-green-600
@@ -55,7 +419,7 @@
                     </div>
                     
                     <!-- Action Buttons -->
-                    <div class="flex flex-wrap items-center gap-3 mt-4">
+                    <div class="order-actions">
                         <a href="{% url 'pharmacy:order_confirmation' order.order_number %}" class="inline-block bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200 text-sm">
                             View details
                         </a>

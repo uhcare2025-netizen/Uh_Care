@@ -10,6 +10,8 @@ from .models import PersonalAppointment, ProviderSchedule, AppointmentReview
 from .forms import PersonalAppointmentForm
 from apps.accounts.models import User, ProviderProfile
 from django.core.paginator import Paginator
+from django.conf import settings
+from django.utils import timezone as dj_timezone
 
 
 @login_required
@@ -157,12 +159,20 @@ def book_personal_appointment(request, provider_id):
             except Exception as e:
                 messages.error(request, f'Error booking appointment: {str(e)}')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            # Surface form errors to the user (helpful during local debugging)
+            try:
+                err_text = form.errors.as_text()
+            except Exception:
+                err_text = str(form.errors)
+            messages.error(request, 'Please correct the errors below: ' + err_text)
+            # Also print to console for developer visibility
+            print('PersonalAppointmentForm invalid:', err_text)
     else:
         form = PersonalAppointmentForm(provider=provider)
     
     # Get available time slots
     today = timezone.now().date()
+    # Build a list of available dates (next 30 days) where provider has schedule
     available_dates = []
     for i in range(30):  # Next 30 days
         date = today + timedelta(days=i)
@@ -172,11 +182,61 @@ def book_personal_appointment(request, provider_id):
             is_available=True
         ).exists():
             available_dates.append(date)
+
+    # Determine the next available date (first in the ordered list)
+    next_available_date = available_dates[0] if available_dates else None
+
+    # Try to determine provider timezone from profile, fall back to project/timezone
+    provider_tz = None
+    try:
+        provider_tz = getattr(provider.provider_profile, 'timezone', None)
+    except Exception:
+        provider_tz = None
+    if not provider_tz:
+        # fallback to Django settings or active timezone
+        provider_tz = getattr(settings, 'TIME_ZONE', dj_timezone.get_current_timezone_name())
+
+    # Serialize available_dates to ISO strings for safe JSON usage in templates
+    available_dates_str = [d.isoformat() for d in available_dates]
+    # Build a mapping of date (ISO) -> available slot count so the frontend can decorate calendar days
+    available_dates_info = {}
+    for d in available_dates:
+        appointment_date = d
+        weekday = appointment_date.weekday()
+        schedules = ProviderSchedule.objects.filter(
+            provider=provider,
+            day_of_week=weekday,
+            is_available=True
+        )
+        slot_count = 0
+        for schedule in schedules:
+            current_time = schedule.start_time
+            end_time = schedule.end_time
+            # iterate slots for this schedule and count unbooked slots
+            while current_time < end_time:
+                is_booked = PersonalAppointment.objects.filter(
+                    provider=provider,
+                    appointment_date=appointment_date,
+                    appointment_time=current_time,
+                    status__in=['pending', 'confirmed']
+                ).exists()
+                if not is_booked:
+                    slot_count += 1
+                # increment by slot duration
+                current_time = (
+                    datetime.combine(appointment_date, current_time) + 
+                    timedelta(minutes=schedule.slot_duration)
+                ).time()
+        available_dates_info[appointment_date.isoformat()] = slot_count
     
     context = {
         'provider': provider,
         'available_dates': available_dates,
         'form': form,
+        'available_dates_str': available_dates_str,
+        'available_dates_info': available_dates_info,
+        'next_available_date': next_available_date,
+        'provider_time_zone': provider_tz,
     }
     
     return render(request, 'appointments/book_personal_appointment.html', context)

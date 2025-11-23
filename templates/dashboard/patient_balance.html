@@ -1,77 +1,648 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block title %}My Balance - UH Care{% endblock %}
 
+{% block extra_css %}
+<style>
+  :root {
+    --uh-blue: #004a99;
+    --uh-blue-dark: #002d6b;
+    --uh-green: #009e4d;
+    --uh-green-dark: #007a3d;
+    --uh-red: #E60000;
+    --uh-yellow: #f59e0b;
+    --uh-blue-light: #e0f2ff;
+    --uh-green-light: #e6fff0;
+    --uh-yellow-light: #fffbeb;
+    --light-bg: #f8fafc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+    --card-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  body {
+    background-color: var(--light-bg);
+  }
+
+  .balance-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--card-shadow);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 5px solid var(--uh-blue);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .balance-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    opacity: 0.06;
+  }
+
+  .balance-stat-card:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-10px);
+  }
+
+  .balance-stat-card.total {
+    border-top-color: var(--uh-blue);
+  }
+
+  .balance-stat-card.total::before {
+    background-color: var(--uh-blue);
+  }
+
+  .balance-stat-card.paid {
+    border-top-color: var(--uh-green);
+  }
+
+  .balance-stat-card.paid::before {
+    background-color: var(--uh-green);
+  }
+
+  .balance-stat-card.unpaid {
+    border-top-color: var(--uh-red);
+  }
+
+  .balance-stat-card.unpaid::before {
+    background-color: var(--uh-red);
+  }
+
+  .balance-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 14px;
+    position: relative;
+    z-index: 1;
+    flex-shrink-0;
+  }
+
+  .balance-icon.blue {
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.15) 0%, rgba(0, 74, 153, 0.05) 100%);
+    color: var(--uh-blue);
+  }
+
+  .balance-icon.green {
+    background: linear-gradient(135deg, rgba(0, 158, 77, 0.15) 0%, rgba(0, 158, 77, 0.05) 100%);
+    color: var(--uh-green);
+  }
+
+  .balance-icon.red {
+    background: linear-gradient(135deg, rgba(230, 0, 0, 0.15) 0%, rgba(230, 0, 0, 0.05) 100%);
+    color: var(--uh-red);
+  }
+
+  .balance-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+  }
+
+  .balance-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+  }
+
+  .balance-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 1rem;
+    line-height: 1.5;
+  }  .balance-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .balance-icon.blue {
+    background: linear-gradient(135deg, var(--uh-blue-light) 0%, #c7e0ff 100%);
+    color: var(--uh-blue-dark);
+  }
+
+  .balance-icon.green {
+    background: linear-gradient(135deg, var(--uh-green-light) 0%, #c7f0d8 100%);
+    color: var(--uh-green-dark);
+  }
+
+  .balance-icon.red {
+    background: linear-gradient(135deg, #fee 0%, #fcc 100%);
+    color: var(--uh-red);
+  }
+
+  .balance-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .balance-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+  }
+
+  .balance-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 1rem;
+  }
+
+  .payment-list-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    padding: 2.25rem;
+    border-bottom: 4px solid var(--uh-blue);
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.03) 0%, rgba(0, 158, 77, 0.03) 100%);
+  }
+
+  .payment-item {
+    background: white;
+    border-radius: 12px;
+    border-left: 5px solid var(--border-color);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--card-shadow);
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.75rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .payment-item:hover {
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.02) 0%, rgba(0, 158, 77, 0.02) 100%);
+    border-left-color: var(--uh-blue);
+    transform: translateX(10px);
+    box-shadow: var(--card-shadow-lg);
+  }
+
+  .payment-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .payment-item-icon {
+    font-size: 2.25rem;
+    flex-shrink-0;
+    text-align: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.1) 0%, rgba(0, 158, 77, 0.1) 100%);
+    border-radius: 12px;
+  }
+
+  .payment-item-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .payment-item-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .payment-item-date {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .payment-item-amount {
+    text-align: right;
+    flex-shrink-0;
+    min-width: 160px;
+  }
+
+  .payment-item-amount-value {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+  }
+
+  .payment-item-status {
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .payment-item-status.unpaid {
+    background-color: rgba(230, 0, 0, 0.12);
+    color: var(--uh-red);
+  }
+
+  .payment-item-status.pending {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+  }
+
+  .payment-item-status.paid {
+    background-color: rgba(0, 158, 77, 0.12);
+    color: var(--uh-green);
+  }
+
+  .payment-item-status::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .payment-item-status.unpaid::before {
+    background-color: var(--uh-red);
+  }
+
+  .payment-item-status.pending::before {
+    background-color: #b45309;
+  }
+
+  .payment-item-status.paid::before {
+    background-color: var(--uh-green);
+  }
+
+  /* Profile Card Styling */
+  .profile-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--card-shadow);
+    border-top: 5px solid var(--uh-blue);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(0, 74, 153, 0.03);
+  }
+
+  .profile-card:hover {
+    box-shadow: var(--card-shadow-lg);
+    transform: translateY(-10px);
+  }
+
+  .profile-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.03) 0%, rgba(0, 158, 77, 0.03) 100%);
+    border-radius: 10px;
+    border-left: 4px solid var(--uh-blue);
+    transition: all 0.3s ease;
+  }
+
+  .profile-info-item:hover {
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.06) 0%, rgba(0, 158, 77, 0.06) 100%);
+    transform: translateX(4px);
+  }
+
+  .profile-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+  }
+
+  .profile-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .profile-value.balance-red {
+    color: var(--uh-red);
+  }
+
+  .profile-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 1.75rem 0;
+  }
+
+  /* Cash Commitment Box */
+  .cash-commitment-box {
+    background: linear-gradient(135deg, rgba(0, 74, 153, 0.06) 0%, rgba(0, 158, 77, 0.06) 100%);
+    border: 2px solid var(--uh-blue-light);
+    border-radius: 12px;
+    padding: 1.75rem;
+    margin-top: 1.75rem;
+    transition: all 0.35s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cash-commitment-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: rgba(0, 74, 153, 0.03);
+    border-radius: 50%;
+  }
+
+  .cash-commitment-box:hover {
+    border-color: var(--uh-blue);
+    box-shadow: 0 0 30px rgba(0, 74, 153, 0.12);
+    transform: translateY(-4px);
+  }
+
+  .commitment-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .commitment-icon {
+    font-size: 1.75rem;
+  }
+
+  .commitment-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--uh-blue);
+  }
+
+  .commitment-amount {
+    font-size: 2.25rem;
+    font-weight: 900;
+    color: var(--uh-blue);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .commitment-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .commitment-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .commitment-btn.primary {
+    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 74, 153, 0.3);
+  }
+
+  .commitment-btn.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 74, 153, 0.4);
+  }
+
+  .commitment-btn.secondary {
+    background: white;
+    color: var(--uh-blue);
+    border: 2px solid var(--uh-blue-light);
+  }
+
+  .commitment-btn.secondary:hover {
+    background: var(--uh-blue-light);
+    border-color: var(--uh-blue);
+    transform: translateY(-2px);
+  }
+
+  .view-all-btn {
+    display: block;
+    text-align: center;
+    padding: 1rem 1.5rem;
+    background: white;
+    border: 2px solid var(--uh-blue-light);
+    border-radius: 10px;
+    color: var(--uh-blue);
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .view-all-btn:hover {
+    background: var(--uh-blue-light);
+    border-color: var(--uh-blue);
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow);
+  }
+
+  .payment-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 10px;
+  }
+
+  .page-header-hero {
+    color: white;
+    padding: 0;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .page-header-hero video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .page-header-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+  }
+
+  .page-header-hero > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .page-header-hero h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header-hero p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: normal;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-uh-blue-700">Financial Summary</h1>
-        <p class="text-lg text-gray-600 mt-2">Overview of your current financial obligation and payment status</p>
+    <!-- Professional Hero Header with Video Background -->
+    <div class="page-header-hero mb-8">
+        <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover">
+            <source src="{% static 'videos/hero.mp4' %}" type="video/mp4">
+        </video>
+        <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0, 74, 153, 0.75) 0%, rgba(0, 45, 107, 0.75) 100%); z-index: 1;"></div>
+        <div class="px-8 py-10 sm:px-10 sm:py-12 relative" style="z-index: 10;">
+            <h1><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 inline-block mr-3 align-middle"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0A.75.75 0 013.75 6v.75m0 0v-.75A.75.75 0 013.75 6h.75m0 0V4.5A.75.75 0 013.75 3h.75m0 0v.75A.75.75 0 013 4.5h-.75m0 0h-.75A.75.75 0 011.5 6v.75m0 0V6A.75.75 0 012.25 5.25h.75M3.75 15v.75A.75.75 0 013 16.5h-.75m0 0v-.75A.75.75 0 013 15h.75m0 0A.75.75 0 013.75 16.5v.75m0 0v-.75A.75.75 0 013.75 15h.75m0 0v-.75A.75.75 0 013.75 13.5h.75m0 0V15A.75.75 0 013.75 15h-.75m0 0h-.75A.75.75 0 011.5 16.5v.75m0 0V16.5A.75.75 0 012.25 15.75h.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Financial Summary</h1>
+            <p>Manage your account balance and track your payments</p>
+        </div>
     </div>
 
     <!-- Professional Stat Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <!-- Card 1: Total Amount -->
-        <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col">
-            <div class="flex items-center gap-4">
-                <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-uh-blue-100 rounded-full">
-                    <!-- Icon: Banknotes -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-uh-blue-700">
+        <div class="balance-stat-card total">
+            <div class="flex items-start gap-4">
+                <div class="balance-icon blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0A.75.75 0 013.75 6v.75m0 0v-.75A.75.75 0 013.75 6h.75m0 0V4.5A.75.75 0 013.75 3h.75m0 0v.75A.75.75 0 013 4.5h-.75m0 0h-.75A.75.75 0 011.5 6v.75m0 0V6A.75.75 0 012.25 5.25h.75M3.75 15v.75A.75.75 0 013 16.5h-.75m0 0v-.75A.75.75 0 013 15h.75m0 0A.75.75 0 013.75 16.5v.75m0 0v-.75A.75.75 0 013.75 15h.75m0 0v-.75A.75.75 0 013.75 13.5h.75m0 0V15A.75.75 0 013.75 15h-.75m0 0h-.75A.75.75 0 011.5 16.5v.75m0 0V16.5A.75.75 0 012.25 15.75h.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <div>
-                    <div class="text-sm font-medium text-gray-600">Total Amount (Gross)</div>
-                    <div class="text-3xl font-extrabold text-gray-900 mt-1">रू {{ gross_total|default:0|floatformat:2 }}</div>
+                <div class="flex-1">
+                    <div class="balance-label"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 014.125 21m0-6.75h4.5M3 13.125v6.75m9.75-10.5h2.25c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 0112 20.25v-6.75m0 0V12c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v6.75m-6.75 0h6.75" /></svg>Total Amount (Gross)</div>
+                    <div class="balance-amount">रू {{ gross_total|default:0|floatformat:2 }}</div>
+                    <p class="balance-description">Services, pharmacy, and equipment charges</p>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-4">Includes services, pharmacy, and equipment charges.</p>
         </div>
 
         <!-- Card 2: Paid Amount (Green) -->
-        <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col">
-            <div class="flex items-center gap-4">
-                <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-uh-green-100 rounded-full">
-                    <!-- Icon: Check Circle -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-uh-green-600">
+        <div class="balance-stat-card paid">
+            <div class="flex items-start gap-4">
+                <div class="balance-icon green">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <div>
-                    <div class="text-sm font-medium text-gray-600">Paid Amount</div>
-                    <div class="text-3xl font-extrabold text-uh-green-600 mt-1">रू {{ paid_amount|default:0|floatformat:2 }}</div>
+                <div class="flex-1">
+                    <div class="balance-label"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Paid Amount</div>
+                    <div class="balance-amount" style="color: var(--uh-green);">रू {{ paid_amount|default:0|floatformat:2 }}</div>
+                    <p class="balance-description">Amount successfully settled</p>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-4">Amount already settled.</p>
         </div>
 
         <!-- Card 3: Unpaid Amount (Red) -->
-        <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col">
-            <div class="flex items-center gap-4 flex-grow">
-                <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-uh-red-100 rounded-full">
-                    <!-- Icon: Exclamation Triangle -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-uh-red-600">
+        <div class="balance-stat-card unpaid">
+            <div class="flex items-start gap-4">
+                <div class="balance-icon red">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
                     </svg>
                 </div>
-                <div>
-                    <div class="text-sm font-medium text-gray-600">Unpaid Amount (Net)</div>
-                    <div class="text-3xl font-black text-uh-red-600 mt-1">रू {{ net_unpaid|default:0|floatformat:2 }}</div>
+                <div class="flex-1">
+                    <div class="balance-label"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" /></svg>Unpaid Amount (Net)</div>
+                    <div class="balance-amount" style="color: var(--uh-red);">रू {{ net_unpaid|default:0|floatformat:2 }}</div>
+                    <p class="balance-description">Pending payment required</p>
+                    <div class="mt-4">
+                        {% if net_unpaid and net_unpaid > 0 %}
+                            <a href="{% url 'payments:history' %}?status=unpaid" class="inline-flex items-center gap-2 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 text-sm" style="background: linear-gradient(135deg, #E60000 0%, #b30000 100%); --tw-ring-color: #E60000;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                                </svg>
+                                Pay Now
+                            </a>
+                        {% else %}
+                            <a href="{% url 'payments:history' %}" class="inline-flex items-center gap-2 font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200 text-sm">
+                                View Payments
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200">
-                {% if net_unpaid and net_unpaid > 0 %}
-                    <a href="{% url 'payments:history' %}?status=unpaid" class="w-full block text-center bg-uh-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-uh-red-500 focus:outline-none focus:ring-2 focus:ring-uh-red-600 focus:ring-offset-2 transition-all duration-200">
-                        Pay Now
-                    </a>
-                {% else %}
-                    <a href="{% url 'payments:history' %}" class="w-full block text-center font-semibold text-gray-700 bg-white border border-gray-300 py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200">
-                        View payments
-                    </a>
-                {% endif %}
-                <p class="text-xs text-gray-500 mt-3">Note: Unpaid = Total − Paid. Cash commitments may be excluded.</p>
             </div>
         </div>
     </div>
@@ -80,106 +651,76 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Column: Recent Payments -->
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-xl">
-                <h3 class="text-xl font-semibold text-gray-900 p-6 border-b border-gray-200">Recent Actionable Payments</h3>
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="payment-list-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659M12 6l-3.879-2.91a.75.75 0 01-.412-.643V2.25c0-.621.504-1.125 1.125-1.125h5.5c.621 0 1.125.504 1.125 1.125v.248c0 .26-.092.508-.266.702L12 6z" />
+                    </svg>
+                    Recent Transactions
+                </div>
 
                 {% if payments %}
-                    <ul class="divide-y divide-gray-200">
+                    <div class="px-4 py-3">
                         {% for p in payments %}
-                            <li class="group">
-                                <a href="{% url 'payments:detail' p.id %}" class="block p-6 hover:bg-gray-50 transition-colors duration-200">
-                                    <div class="flex items-center justify-between gap-4">
-                                        <!-- Icon + Details -->
-                                        <div class="flex items-center gap-4">
-                                            <!-- Icon for payment type -->
-                                            <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-uh-blue-100 rounded-full">
-                                                {% if p.appointment %}
-                                                    <!-- Icon: Calendar -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-uh-blue-700">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                                    </svg>
-                                                {% elif p.pharmacy_order %}
-                                                    <!-- Icon: Pill -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-uh-blue-700">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-3.857 2.25M12 21.75l-5.571-3m5.571 3l5.571-3m-5.571 0V12m0 0l5.571 3M12 12l-5.571 3" />
-                                                    </svg>
-                                                {% elif p.equipment_purchase %}
-                                                    <!-- Icon: Box -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-uh-blue-700">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10.5 11.25h3M12 15V7.5" />
-                                                    </svg>
-                                                {% elif p.equipment_rental %}
-                                                    <!-- Icon: Refresh -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-uh-blue-700">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                                    </svg>
-                                                {% else %}
-                                                    <!-- Icon: Dollar -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-uh-blue-700">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659M12 6l-3.879-2.91a.75.75 0 01-.412-.643V2.25c0-.621.504-1.125 1.125-1.125h5.5c.621 0 1.125.504 1.125 1.125v.248c0 .26-.092.508-.266.702L12 6z" />
-                                                    </svg>
-                                                {% endif %}
-                                            </div>
+                            <a href="{% url 'payments:detail' p.id %}" class="payment-item">
+                                <!-- Icon -->
+                                <div class="payment-item-icon">
+                                    {% if p.appointment %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                                    {% elif p.pharmacy_order %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A9.75 9.75 0 1027 12a9.75 9.75 0 01-13.5-8.25z" /></svg>
+                                    {% elif p.equipment_purchase %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M9.75 17v-5.25m5.25-1.335l-2.25-2.25m0 0l-2.25 2.25M15 11.25v5.25" /></svg>
+                                    {% elif p.equipment_rental %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5H5.25A2.25 2.25 0 003 9.75v10.5A2.25 2.25 0 005.25 22.5h13.5A2.25 2.25 0 0021 20.25V9.75a2.25 2.25 0 00-2.25-2.25H16.5m-10.875 4.5H9m4.5 0h.008v.008H13.5v-.008z" /></svg>
+                                    {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0A.75.75 0 013.75 6v.75m0 0v-.75A.75.75 0 013.75 6h.75m0 0V4.5A.75.75 0 013.75 3h.75m0 0v.75A.75.75 0 013 4.5h-.75m0 0h-.75A.75.75 0 011.5 6v.75m0 0V6A.75.75 0 012.25 5.25h.75M3.75 15v.75A.75.75 0 013 16.5h-.75m0 0v-.75A.75.75 0 013 15h.75m0 0A.75.75 0 013.75 16.5v.75m0 0v-.75A.75.75 0 013.75 15h.75m0 0v-.75A.75.75 0 013.75 13.5h.75m0 0V15A.75.75 0 013.75 15h-.75m0 0h-.75A.75.75 0 011.5 16.5v.75m0 0V16.5A.75.75 0 012.25 15.75h.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    {% endif %}
+                                </div>
 
-                                            <!-- Text -->
-                                            <div class="flex-grow">
-                                                <div class="font-semibold text-gray-900 group-hover:text-uh-blue-700">
-                                                    {% if p.appointment %}
-                                                        {{ p.appointment.service.name }}
-                                                    {% elif p.pharmacy_order %}
-                                                        Pharmacy Order #{{ p.pharmacy_order.order_number }}
-                                                    {% elif p.equipment_purchase %}
-                                                        Equipment Purchase #{{ p.equipment_purchase.order_number }}
-                                                    {% elif p.equipment_rental %}
-                                                        Equipment Rental #{{ p.equipment_rental.rental_number }}
-                                                    {% else %}
-                                                        Payment #{{ p.id }}
-                                                    {% endif %}
-                                                </div>
-                                                <div class="text-sm text-gray-500">
-                                                    {{ p.created_at|date:'F d, Y' }} •
-                                                    {% if p.appointment %}
-                                                        {{ p.get_payment_status_display|default:p.payment_status }}
-                                                    {% elif p.pharmacy_order %}
-                                                        {{ p.pharmacy_order.get_status_display }}
-                                                    {% elif p.equipment_purchase %}
-                                                        {{ p.equipment_purchase.get_status_display }}
-                                                    {% elif p.equipment_rental %}
-                                                        {{ p.equipment_rental.get_status_display }}
-                                                    {% else %}
-                                                        {{ p.get_payment_status_display|default:p.payment_status }}
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Amount + Status -->
-                                        <div class="text-right flex-shrink-0 min-w-[120px]">
-                                            <div class="font-bold text-gray-900">रू {{ p.amount|floatformat:2 }}</div>
-                                            <div class="text-sm font-semibold">
-                                                {% if p.payment_status == 'unpaid' %}
-                                                    <span class="text-uh-red-600">Unpaid</span>
-                                                {% elif p.payment_status == 'pending' %}
-                                                    <span class="text-yellow-600">Pending</span>
-                                                {% else %}
-                                                    <span class="text-uh-green-600">{{ p.get_payment_status_display|default:p.payment_status }}</span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
+                                <!-- Details -->
+                                <div class="payment-item-details">
+                                    <div class="payment-item-title">
+                                        {% if p.appointment %}
+                                            {{ p.appointment.service.name }}
+                                        {% elif p.pharmacy_order %}
+                                            Pharmacy Order #{{ p.pharmacy_order.order_number }}
+                                        {% elif p.equipment_purchase %}
+                                            Equipment Purchase #{{ p.equipment_purchase.order_number }}
+                                        {% elif p.equipment_rental %}
+                                            Equipment Rental #{{ p.equipment_rental.rental_number }}
+                                        {% else %}
+                                            Payment #{{ p.id }}
+                                        {% endif %}
                                     </div>
-                                </a>
-                            </li>
+                                    <div class="payment-item-date">{{ p.created_at|date:'M d, Y' }}</div>
+                                </div>
+
+                                <!-- Amount & Status -->
+                                <div class="payment-item-amount">
+                                    <div class="payment-item-amount-value">रू {{ p.amount|floatformat:2 }}</div>
+                                    <span class="payment-item-status {% if p.payment_status == 'unpaid' %}unpaid{% elif p.payment_status == 'pending' %}pending{% else %}paid{% endif %}">
+                                        {% if p.payment_status == 'unpaid' %}
+                                            Unpaid
+                                        {% elif p.payment_status == 'pending' %}
+                                            Pending
+                                        {% else %}
+                                            Paid
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </a>
                         {% endfor %}
-                    </ul>
+                    </div>
                 {% else %}
                     <!-- Professional Empty State -->
-                    <div class="text-center p-12">
-                        <!-- Icon: Document -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-gray-400 mx-auto mb-4">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                        </svg>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">No actionable payments</h3>
-                        <p class="text-gray-600">You are all caught up!</p>
+                    <div class="text-center py-16 px-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-400 mx-auto mb-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12m7.5-9h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75M3.375 7.5H21m-13.5 3h6.75m.75 13.5H3.75a2.25 2.25 0 01-2.25-2.25V6.75c0-1.243.926-2.25 2.25-2.25h17.25c1.243 0 2.25 1.007 2.25 2.25v10.5" /></svg>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">No transactions yet</h3>
+                        <p class="text-gray-600 text-lg">You are all caught up!</p>
+                        <a href="{% url 'payments:history' %}" class="inline-block mt-6 bg-gradient-to-r from-uh-blue to-uh-blue-dark text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-center">
+                            View Payment History
+                        </a>
                     </div>
                 {% endif %}
             </div>
@@ -187,34 +728,47 @@
 
         <!-- Aside Column: Profile -->
         <aside class="lg:col-span-1 space-y-6">
-            <div class="bg-white rounded-lg shadow-xl p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Your Profile</h3>
-                <div class="space-y-3">
-                    <div class="text-gray-600"><span class="font-medium text-gray-900">{{ profile.user.get_full_name }}</span></div>
-                    <div class="text-gray-600">Balance: <span class="font-medium text-uh-red-600">रू {{ profile.total_balance|floatformat:2 }}</span></div>
-                    <div class="text-gray-600">Blood Group: <span class="font-medium text-gray-900">{{ profile.blood_group|default:'N/A' }}</span></div>
+            <div class="profile-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 inline-block mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>Your Profile</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="profile-info-item">
+                        <span class="profile-label">Full Name</span>
+                        <span class="profile-value">{{ profile.user.get_full_name }}</span>
+                    </div>
+                    <div class="profile-info-item">
+                        <span class="profile-label">Current Balance</span>
+                        <span class="profile-value balance-red">रू {{ profile.total_balance|floatformat:2 }}</span>
+                    </div>
+                    <div class="profile-info-item">
+                        <span class="profile-label">Blood Group</span>
+                        <span class="profile-value">{{ profile.blood_group|default:'N/A' }}</span>
+                    </div>
                 </div>
 
                 {% if cash_committed and cash_committed > 0 %}
                     <!-- Branded Callout Box -->
-                    <div class="mt-6 bg-uh-blue-100 border-l-4 border-uh-blue-700 p-4 rounded-md">
-                        <div class="text-sm font-medium text-uh-blue-700 mb-1">Cash Commitments</div>
-                        <div class="text-xl font-bold text-uh-blue-700">रू {{ cash_committed|floatformat:2 }}</div>
-                        <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                            <a href="{% url 'payments:cash_commitments' %}" class="w-full text-center bg-uh-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200 text-sm">
+                    <div class="cash-commitment-box">
+                        <div class="commitment-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 commitment-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm4-8h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm4-8h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm4-8h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zm0 2h.008v.008h-.008v-.008zM3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0020.25 3H3.75a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
+                            <span class="commitment-label">Cash Commitments</span>
+                        </div>
+                        <div class="commitment-amount">रू {{ cash_committed|floatformat:2 }}</div>
+                        <div class="commitment-actions">
+                            <a href="{% url 'payments:cash_commitments' %}" class="commitment-btn primary">
                                 View Commitments
                             </a>
-                            <a href="{% url 'payments:history' %}" class="w-full text-center font-semibold text-gray-700 bg-white border border-gray-300 py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200 text-sm">
+                            <a href="{% url 'payments:history' %}" class="commitment-btn secondary">
                                 All Payments
                             </a>
                         </div>
                     </div>
                 {% else %}
-                    <div class="mt-6 border-t border-gray-200 pt-6">
-                        <a href="{% url 'payments:history' %}" class="w-full block text-center font-semibold text-gray-700 bg-white border border-gray-300 py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200">
-                            View All Payments
-                        </a>
-                    </div>
+                    <div class="profile-divider"></div>
+                    <a href="{% url 'payments:history' %}" class="view-all-btn">
+                        View All Payments →
+                    </a>
                 {% endif %}
             </div>
         </aside>

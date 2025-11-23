@@ -184,7 +184,11 @@ class ProfileUpdateForm(forms.ModelForm):
                 choices=ProviderProfile.SPECIALIZATION_CHOICES
             )
             self.fields['license_number'] = forms.CharField(max_length=50)
-            self.fields['years_of_experience'] = forms.IntegerField(min_value=0)
+            # Allow leaving years_of_experience blank when updating profile
+            # (registration still requires the value). Use initial value from
+            # the existing ProviderProfile if available so the form shows the
+            # current value on GET requests.
+            self.fields['years_of_experience'] = forms.IntegerField(min_value=0, required=False)
             self.fields['bio'] = forms.CharField(
                 widget=forms.Textarea(attrs={'rows': 4}),
                 required=False
@@ -194,6 +198,19 @@ class ProfileUpdateForm(forms.ModelForm):
                 decimal_places=2,
                 min_value=0
             )
+            # Populate initial values from the related profile when editing
+            try:
+                if self.instance and hasattr(self.instance, 'provider_profile'):
+                    prof = self.instance.provider_profile
+                    self.fields['specialization'].initial = prof.specialization
+                    self.fields['license_number'].initial = prof.license_number
+                    # years_of_experience may be zero; set initial explicitly
+                    self.fields['years_of_experience'].initial = prof.years_of_experience
+                    self.fields['bio'].initial = prof.bio
+                    self.fields['hourly_rate'].initial = prof.hourly_rate
+            except Exception:
+                # If the related profile is missing or access fails, leave defaults
+                pass
     
     class Meta:
         model = User
@@ -215,11 +232,14 @@ class ProfileUpdateForm(forms.ModelForm):
                 profile.save()
             elif self.user_role == 'provider':
                 profile = user.provider_profile
-                profile.specialization = self.cleaned_data.get('specialization')
-                profile.license_number = self.cleaned_data.get('license_number')
-                profile.years_of_experience = self.cleaned_data.get('years_of_experience')
-                profile.bio = self.cleaned_data.get('bio', '')
-                profile.hourly_rate = self.cleaned_data.get('hourly_rate')
+                profile.specialization = self.cleaned_data.get('specialization') or profile.specialization
+                profile.license_number = self.cleaned_data.get('license_number') or profile.license_number
+                # Preserve existing years_of_experience when the field is left blank
+                yoe = self.cleaned_data.get('years_of_experience')
+                if yoe is not None:
+                    profile.years_of_experience = yoe
+                profile.bio = self.cleaned_data.get('bio', profile.bio)
+                profile.hourly_rate = self.cleaned_data.get('hourly_rate') or profile.hourly_rate
                 profile.save()
                 
         return user

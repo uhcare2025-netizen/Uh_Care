@@ -7,7 +7,8 @@ from decimal import Decimal
 
 class Appointment(models.Model):
     """
-    Core appointment/booking model
+    DEPRECATED: Legacy appointment/booking model - no longer used for marketplace bookings.
+    Kept for backward compatibility and historical data. Use ServiceBooking for new marketplace bookings.
     """
     STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -120,6 +121,88 @@ class Appointment(models.Model):
         super().save(*args, **kwargs)
 
 
+class ServiceBooking(models.Model):
+    """
+    Non-destructive new model for marketplace service bookings.
+    Initially mirrors the existing `Appointment` table; we will migrate data
+    from `Appointment` into `ServiceBooking` via a data migration.
+    """
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('rejected', 'Rejected'),
+    )
+
+    # References
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_service_bookings')
+    provider = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='provider_service_bookings'
+    )
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='service_bookings')
+
+    # Scheduling
+    appointment_date = models.DateField()
+    appointment_time = models.TimeField()
+    duration_hours = models.DecimalField(max_digits=4, decimal_places=2, default=1.0)
+
+    # Location
+    service_address = models.TextField(help_text="Where the service will be provided")
+
+    # Pricing
+    service_price = models.DecimalField(max_digits=10, decimal_places=2)
+    additional_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    final_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Final price set by admin/provider after assessment (overrides service_price in totals)",
+    )
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Notes
+    patient_notes = models.TextField(blank=True, help_text="Special instructions from patient")
+    provider_notes = models.TextField(blank=True, help_text="Provider notes after service")
+    cancellation_reason = models.TextField(blank=True)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'service_bookings'
+        verbose_name = 'Service Booking'
+        verbose_name_plural = 'Service Bookings'
+        indexes = [
+            models.Index(fields=['patient', 'status']),
+            models.Index(fields=['provider', 'status']),
+            models.Index(fields=['appointment_date', 'status']),
+            models.Index(fields=['created_at']),
+        ]
+        ordering = ['-appointment_date', '-appointment_time']
+
+    def __str__(self):
+        return f"ServiceBooking #{self.id} - {self.service.name} on {self.appointment_date}"
+
+    def save(self, *args, **kwargs):
+        # Calculate total amount: prefer final_price when set
+        effective_price = self.final_price if (self.final_price is not None) else self.service_price
+        self.total_amount = (effective_price or Decimal('0.00')) + (self.additional_charges or Decimal('0.00'))
+        super().save(*args, **kwargs)
+
+
 class ProviderAvailability(models.Model):
     """
     Provider working hours and availability
@@ -228,19 +311,22 @@ class PersonalAppointment(models.Model):
     duration_minutes = models.IntegerField(default=30)
     
     # Location
+    # Removed 'home' and 'clinic' delivery types per product decision.
     LOCATION_TYPE = (
-        ('home', 'Home Visit'),
-        ('clinic', 'At Clinic'),
         ('video', 'Video Call'),
         ('phone', 'Phone Call'),
     )
-    location_type = models.CharField(max_length=20, choices=LOCATION_TYPE, default='home')
-    location_address = models.TextField(blank=True, help_text="Required for home visits")
+    # Default to 'video' to reflect most common remote appointments
+    location_type = models.CharField(max_length=20, choices=LOCATION_TYPE, default='video')
+    # Address is optional for remote appointments; keep field for backward compatibility
+    location_address = models.TextField(blank=True, help_text="Optional address (only needed for in-person bookings)")
     video_link = models.URLField(blank=True, help_text="For video appointments")
     
     # Reason & Notes
     reason = models.TextField(help_text="Reason for appointment")
     symptoms = models.TextField(blank=True, help_text="Current symptoms if any")
+    # Patient contact captured at booking time
+    patient_phone = models.CharField(max_length=32, blank=True, help_text="Phone number provided by patient for this appointment")
     patient_notes = models.TextField(blank=True)
     provider_notes = models.TextField(blank=True)
     diagnosis = models.TextField(blank=True)

@@ -2,18 +2,19 @@ from django import forms
 from datetime import date, time, datetime, timedelta
 from decimal import Decimal
 from django.utils import timezone
-from .models import Appointment
+from .models import ServiceBooking
 from apps.payments.models import Payment
 from .models import PersonalAppointment
 
 
 class AppointmentBookingForm(forms.ModelForm):
     """
-    Form for booking appointments
+    Form for booking marketplace service bookings.
+    Uses the new `ServiceBooking` model (mirrors old `Appointment`).
     """
     
     class Meta:
-        model = Appointment
+        model = ServiceBooking
         fields = [
             'appointment_date',
             'appointment_time',
@@ -148,7 +149,7 @@ class AppointmentBookingForm(forms.ModelForm):
             # Check for existing appointment for the same service at same slot
             service = getattr(self, 'service', None)
             if service:
-                conflict_qs = Appointment.objects.filter(
+                conflict_qs = ServiceBooking.objects.filter(
                     service=service,
                     appointment_date=appointment_date,
                     appointment_time=appointment_time,
@@ -170,7 +171,7 @@ class PersonalAppointmentForm(forms.ModelForm):
         model = PersonalAppointment
         fields = [
             'appointment_type', 'appointment_date', 'appointment_time', 'duration_minutes',
-            'location_type', 'location_address', 'video_link', 'reason', 'symptoms',
+            'location_type', 'location_address', 'video_link', 'patient_phone', 'reason', 'symptoms',
             'patient_notes', 'consultation_fee', 'additional_charges',
         ]
         widgets = {
@@ -178,6 +179,7 @@ class PersonalAppointmentForm(forms.ModelForm):
             'appointment_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'duration_minutes': forms.NumberInput(attrs={'class': 'form-control'}),
             'location_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'patient_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Your phone number'}),
             'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'symptoms': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'patient_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),

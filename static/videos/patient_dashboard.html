@@ -28,6 +28,10 @@
   }
 
   .dashboard-header {
+    background: url('{% static "images/side-image.png" %}');
+    background-size: cover;
+    background-position: right center;
+    background-attachment: fixed;
     color: white;
     padding: 2.5rem;
     border-radius: 12px;
@@ -35,27 +39,6 @@
     box-shadow: var(--card-shadow-lg);
     position: relative;
     overflow: hidden;
-  }
-
-  .dashboard-header video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-  }
-
-  .dashboard-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(0, 74, 153, 0.7) 0%, rgba(0, 45, 107, 0.7) 100%);
-    z-index: 1;
   }
 
   .dashboard-header h1 {
@@ -76,119 +59,80 @@
   .stat-card {
     background: white;
     border-radius: 12px;
-    padding: 2rem 1.5rem;
+    padding: 1.5rem;
     box-shadow: var(--card-shadow);
     transition: all 0.3s ease;
-    border-top: 4px solid var(--uh-blue);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -50px;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    opacity: 0.05;
+    border-left: 5px solid var(--uh-blue);
   }
 
   .stat-card:hover {
     box-shadow: var(--card-shadow-lg);
-    transform: translateY(-6px);
-    border-top-color: var(--uh-blue-dark);
+    transform: translateY(-4px);
   }
 
   .stat-card.appointments {
-    border-top-color: var(--uh-blue);
-  }
-
-  .stat-card.appointments::before {
-    background-color: var(--uh-blue);
+    border-left-color: var(--uh-blue);
   }
 
   .stat-card.prescriptions {
-    border-top-color: var(--uh-green);
-  }
-
-  .stat-card.prescriptions::before {
-    background-color: var(--uh-green);
+    border-left-color: var(--uh-green);
   }
 
   .stat-card.balance {
-    border-top-color: var(--uh-yellow);
-  }
-
-  .stat-card.balance::before {
-    background-color: var(--uh-yellow);
+    border-left-color: var(--uh-yellow);
   }
 
   .stat-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 10px;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
     margin-bottom: 1rem;
-    position: relative;
-    z-index: 1;
   }
 
   .stat-icon.blue {
-    background: linear-gradient(135deg, var(--uh-blue-light) 0%, #c7e0ff 100%);
+    background-color: var(--uh-blue-light);
     color: var(--uh-blue-dark);
   }
 
   .stat-icon.green {
-    background: linear-gradient(135deg, var(--uh-green-light) 0%, #c7f0d8 100%);
+    background-color: var(--uh-green-light);
     color: var(--uh-green-dark);
   }
 
   .stat-icon.amber {
-    background: linear-gradient(135deg, var(--uh-yellow-light) 0%, #fef3c7 100%);
-    color: #d97706;
+    background-color: var(--uh-yellow-light);
+    color: var(--uh-yellow);
   }
 
   .stat-label {
     font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 600;
-    margin-bottom: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
   }
 
   .stat-value {
-    font-size: 2.5rem;
-    font-weight: 800;
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1rem;
-    line-height: 1;
+    margin-bottom: 0.5rem;
   }
 
   .stat-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
+    display: inline-block;
+    margin-top: 0.5rem;
     font-size: 0.875rem;
-    color: white;
-    background: linear-gradient(135deg, var(--uh-blue) 0%, var(--uh-blue-dark) 100%);
+    color: var(--uh-blue);
     text-decoration: none;
     font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 74, 153, 0.15);
+    transition: color 0.2s ease;
   }
 
   .stat-action:hover {
-    background: linear-gradient(135deg, var(--uh-blue-dark) 0%, #001a4d 100%);
-    box-shadow: 0 4px 16px rgba(0, 74, 153, 0.25);
-    transform: translateX(4px);
+    color: var(--uh-blue-dark);
   }
 
   .section-title {
@@ -211,13 +155,10 @@
     padding: 1.5rem;
     box-shadow: var(--card-shadow);
     transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
   }
 
   .activity-card:hover {
     box-shadow: var(--card-shadow-lg);
-    transform: translateY(-2px);
-    border-color: var(--uh-blue);
   }
 
   .activity-header {
@@ -226,16 +167,13 @@
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var(--uh-blue-light);
+    border-bottom: 1px solid var(--border-color);
   }
 
   .activity-title {
     font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--uh-blue);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   .activity-view-all {
@@ -243,93 +181,42 @@
     color: var(--uh-blue);
     text-decoration: none;
     font-weight: 600;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-  }
-
-  .activity-view-all:hover {
-    background-color: var(--uh-blue-light);
-    color: var(--uh-blue-dark);
   }
 
   .activity-item {
-    padding: 1.25rem 0;
-    border-bottom: 1px solid #f3f4f6;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f9fafb;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .activity-item:hover {
-    background-color: #fafbfc;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-    border-radius: 6px;
   }
 
   .activity-item:last-child {
     border-bottom: none;
   }
 
-  .activity-info {
-    flex: 1;
-    min-width: 0;
-  }
-
   .activity-info h4 {
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    word-break: break-word;
+    margin-bottom: 0.25rem;
   }
 
   .activity-meta {
     font-size: 0.8rem;
     color: var(--text-secondary);
-    display: block;
-    margin-bottom: 0.25rem;
-  }
-
-  .activity-meta.text-xs {
-    font-size: 0.75rem;
   }
 
   .activity-amount {
     font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--uh-green);
-    text-align: right;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .activity-action {
-    font-size: 0.8rem;
-    color: var(--uh-blue);
-    text-decoration: none;
     font-weight: 600;
-    padding: 0.35rem 0.75rem;
-    background-color: var(--uh-blue-light);
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    display: inline-block;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  .activity-action:hover {
-    background-color: var(--uh-blue);
-    color: white;
+    color: var(--text-primary);
+    text-align: right;
   }
 
   .empty-state {
     text-align: center;
-    padding: 2.5rem 1rem;
+    padding: 2rem;
     color: var(--text-secondary);
   }
 
@@ -337,13 +224,7 @@
     width: 3rem;
     height: 3rem;
     margin: 0 auto 1rem;
-    opacity: 0.4;
-    color: var(--text-secondary);
-  }
-
-  .empty-state p {
-    font-size: 0.95rem;
-    margin-top: 0.5rem;
+    opacity: 0.5;
   }
 
   .balance-card {
@@ -525,11 +406,8 @@
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
   
   <div class="dashboard-header">
-    <video autoplay muted loop playsinline>
-      <source src="{% static 'videos/hero.mp4' %}" type="video/mp4">
-    </video>
     <h1>Welcome back, {{ user.first_name|default:user.username|default:'Patient' }}!</h1>
-    <p>Manage services, personal appointments, and payments all in one place.</p>
+    <p>Manage your health services, appointments, and payments all in one place.</p>
   </div>
 
   <div class="quick-actions">
@@ -543,7 +421,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
       </svg>
-      Services
+      Appointments
     </a>
     <a href="{% url 'pharmacy:my_orders' %}" class="action-btn">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -565,24 +443,13 @@
       Your browser does not support the video tag.
     </video>
     <div class="balance-content">
-      <div class="balance-label">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2" style="vertical-align: middle;">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      Current Account Balance
-    </div>
+      <div class="balance-label">💳 Current Account Balance</div>
       <div class="balance-amount">रु {{ stats.current_balance|default:0|floatformat:2|intcomma }}</div>
       <div class="balance-status">
         {% if stats.pending_payments and stats.pending_payments > 0 %}
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-1" style="vertical-align: middle; color: #f59e0b;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-          </svg>
-          {{ stats.pending_payments|intcomma }} pending payment(s)
+          ⚠️ {{ stats.pending_payments|intcomma }} pending payment(s)
         {% else %}
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-1" style="vertical-align: middle; color: #10b981;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          All payments cleared
+          ✓ All payments cleared
         {% endif %}
       </div>
       <div class="balance-actions">
@@ -595,48 +462,33 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="stat-card appointments">
       <div class="stat-icon blue">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
         </svg>
       </div>
-      <div class="stat-label">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2" style="vertical-align: middle;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-        </svg>
-        Upcoming Services
-      </div>
+      <div class="stat-label">Upcoming Appointments</div>
       <div class="stat-value">{{ stats.total_appointments|default:0 }}</div>
       <a href="{% url 'appointments:my_appointments' %}" class="stat-action">View All →</a>
     </div>
 
     <div class="stat-card prescriptions">
       <div class="stat-icon green">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <div class="stat-label">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2" style="vertical-align: middle;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Active Prescriptions
-      </div>
+      <div class="stat-label">Active Prescriptions</div>
       <div class="stat-value">{{ stats.prescriptions_count|default:0 }}</div>
       <a href="{% url 'pharmacy:my_orders' %}" class="stat-action">View All →</a>
     </div>
 
     <div class="stat-card balance">
       <div class="stat-icon amber">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <div class="stat-label">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-2" style="vertical-align: middle;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Outstanding Balance
-      </div>
+      <div class="stat-label">Outstanding Balance</div>
       <div class="stat-value">रु {{ stats.outstanding_amount|default:0|floatformat:2|intcomma }}</div>
       <a href="{% url 'dashboard:patient_balance' %}" class="stat-action">Details →</a>
     </div>
@@ -646,33 +498,18 @@
   <p class="section-subtitle">Your latest orders, equipment, and services</p>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Pharmacy Orders Card -->
     <div class="activity-card">
       <div class="activity-header">
-        <h3 class="activity-title">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0A9.005 9.005 0 0112 3.75c-4.478 0-8.268 2.943-9.362 7.5h0C3.732 16.644 7.522 19.5 12 19.5c4.478 0 8.268-2.856 9.362-7.5h0z" />
-          </svg>
-          Pharmacy Orders
-        </h3>
-        <a href="{% url 'pharmacy:my_orders' %}" class="activity-view-all">View All →</a>
+        <h3 class="activity-title">Pharmacy Orders</h3>
+        <a href="{% url 'pharmacy:my_orders' %}" class="activity-view-all">View All</a>
       </div>
       <div>
         {% if recent_pharmacy_orders %}
           {% for order in recent_pharmacy_orders|slice:":3" %}
             <div class="activity-item">
               <div class="activity-info">
-                <h4>📦 Order #{{ order.order_number }}</h4>
-                <span class="activity-meta">{{ order.created_at|date:'M d, Y' }}</span>
-                <span class="activity-meta">
-                  {% if order.get_status_display == 'Pending' %}
-                    <span style="color: #f59e0b;">● {{ order.get_status_display }}</span>
-                  {% elif order.get_status_display == 'Completed' %}
-                    <span style="color: #10b981;">● {{ order.get_status_display }}</span>
-                  {% else %}
-                    <span style="color: #6b7280;">● {{ order.get_status_display }}</span>
-                  {% endif %}
-                </span>
+                <h4>Order #{{ order.order_number }}</h4>
+                <span class="activity-meta">{{ order.created_at|date:'M d, Y' }} • {{ order.get_status_display }}</span>
               </div>
               <div class="activity-amount">रु {{ order.total_amount|intcomma }}</div>
             </div>
@@ -688,23 +525,17 @@
       </div>
     </div>
 
-    <!-- Equipment Card -->
     <div class="activity-card">
       <div class="activity-header">
-        <h3 class="activity-title">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25-2.25m0 0l2.25 2.25M12 21v-4.875m0 0H7.125M12 21H16.875" />
-          </svg>
-          Equipment
-        </h3>
-        <a href="{% url 'equipment:my_purchases' %}" class="activity-view-all">View All →</a>
+        <h3 class="activity-title">Equipment</h3>
+        <a href="{% url 'equipment:my_purchases' %}" class="activity-view-all">View All</a>
       </div>
       <div>
         {% if recent_purchases or recent_rentals %}
           {% for purchase in recent_purchases|slice:":2" %}
             <div class="activity-item">
               <div class="activity-info">
-                <h4>🏥 {{ purchase.equipment.name }}</h4>
+                <h4>{{ purchase.equipment.name }}</h4>
                 <span class="activity-meta">{{ purchase.created_at|date:'M d, Y' }} • Qty: {{ purchase.quantity }}</span>
               </div>
               <div class="activity-amount">रु {{ purchase.total_amount|intcomma }}</div>
@@ -713,7 +544,7 @@
           {% for rental in recent_rentals|slice:":1" %}
             <div class="activity-item">
               <div class="activity-info">
-                <h4>🔄 Rental: {{ rental.equipment.name }}</h4>
+                <h4>Rental: {{ rental.equipment.name }}</h4>
                 <span class="activity-meta">{{ rental.created_at|date:'M d, Y' }}</span>
               </div>
               <div class="activity-amount">रु {{ rental.total_amount|intcomma }}</div>
@@ -730,33 +561,18 @@
       </div>
     </div>
 
-    <!-- Services Card -->
     <div class="activity-card">
       <div class="activity-header">
-        <h3 class="activity-title">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-          </svg>
-          Services Received
-        </h3>
-        <a href="{% url 'appointments:my_appointments' %}" class="activity-view-all">View All →</a>
+        <h3 class="activity-title">Services Received</h3>
+        <a href="{% url 'appointments:my_appointments' %}" class="activity-view-all">View All</a>
       </div>
       <div>
         {% if recent_appointments %}
           {% for appt in recent_appointments|slice:":3" %}
             <div class="activity-item">
               <div class="activity-info">
-                <h4>💉 {{ appt.service.name }}</h4>
-                <span class="activity-meta">{{ appt.appointment_date|date:'M d, Y' }}</span>
-                <span class="activity-meta">
-                  {% if appt.get_status_display == 'Pending' %}
-                    <span style="color: #f59e0b;">● {{ appt.get_status_display }}</span>
-                  {% elif appt.get_status_display == 'Completed' %}
-                    <span style="color: #10b981;">● {{ appt.get_status_display }}</span>
-                  {% else %}
-                    <span style="color: #6b7280;">● {{ appt.get_status_display }}</span>
-                  {% endif %}
-                </span>
+                <h4>{{ appt.service.name }}</h4>
+                <span class="activity-meta">{{ appt.appointment_date|date:'M d, Y' }} • {{ appt.get_status_display }}</span>
               </div>
               <div class="activity-amount">रु {{ appt.total_amount|intcomma }}</div>
             </div>
@@ -767,47 +583,6 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
             </svg>
             <p>No services received yet</p>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <h2 class="section-title">Personal Appointments</h2>
-  <p class="section-subtitle">Your direct consultations with healthcare providers</p>
-
-  <div class="grid grid-cols-1 gap-6">
-    <!-- Upcoming Personal Appointments Only -->
-    <div class="activity-card">
-      <div class="activity-header">
-        <h3 class="activity-title">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 inline-block mr-2" style="vertical-align: middle;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-          </svg>
-          Upcoming Appointments
-        </h3>
-        <a href="{% url 'appointments:my_personal_appointments' %}" class="activity-view-all">View All</a>
-      </div>
-      <div>
-        {% if upcoming_personal %}
-          {% for appt in upcoming_personal %}
-            <div class="activity-item">
-              <div class="activity-info">
-                <h4>{{ appt.provider.get_full_name }}</h4>
-                <span class="activity-meta">{{ appt.appointment_date|date:'M d, Y' }} • {{ appt.appointment_time|time:'g:i A' }}</span>
-                <span class="activity-meta text-xs">{{ appt.get_appointment_type_display }}</span>
-              </div>
-              <div>
-                <a href="{% url 'appointments:personal_appointment_detail' appt.id %}" class="inline-block text-uh-blue-600 hover:text-uh-blue-700 font-medium text-sm">View</a>
-              </div>
-            </div>
-          {% endfor %}
-        {% else %}
-          <div class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-12 h-12 text-gray-400 mx-auto mb-2">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p>No upcoming appointments</p>
           </div>
         {% endif %}
       </div>

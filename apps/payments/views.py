@@ -341,6 +341,10 @@ def payment_history(request):
         payments = payments.filter(payment_status=status_filter)
     
     # Calculate totals
+    gross_total = Payment.objects.filter(
+        patient=request.user
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
     total_paid = Payment.objects.filter(
         patient=request.user,
         payment_status='paid'
@@ -351,11 +355,14 @@ def payment_history(request):
         payment_status='unpaid'
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     
+    net_unpaid = gross_total - total_paid
+    
     context = {
         'payments': payments,
         'status_filter': status_filter,
+        'gross_total': gross_total,
         'total_paid': total_paid,
-        'total_unpaid': total_unpaid,
+        'net_unpaid': net_unpaid,
     }
     
     return render(request, 'payments/history.html', context)

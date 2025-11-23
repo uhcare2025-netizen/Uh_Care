@@ -3,45 +3,128 @@
 
 {% block title %}Login - UH Care{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<style>
+    body.login-page { 
+        display: block;
+        background: #f8f9fa;
+    }
+    body.login-page > nav { position: relative; z-index: 100; }
+    .login-wrapper {
+        min-height: calc(100vh - 64px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-  <div class="max-w-lg mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white rounded-lg shadow-xl p-8 sm:p-10">
-      <div class="flex justify-center mb-6">
-        <img class="h-12 w-auto" src="YOUR_LOGO_URL_HERE.jpg" alt="UH Care Logo" onerror="this.src='https://placehold.co/150x40/004a9e/ffffff?text=UH+Care&font=inter'; this.onerror=null;">
-      </div>
+<script>document.body.classList.add('login-page');</script>
 
-      <h2 class="text-center text-3xl font-bold text-uh-blue-700 mb-6">Login to your Account</h2>
-
-      <form method="post" class="django-form">
-        {% csrf_token %}
-
-        {% if form.errors and not form.non_field_errors %}
-        <div class="alert alert-danger">Please correct the errors below.</div>
-        {% endif %}
-
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          {% for error in form.non_field_errors %}
-            <span>{{ error }}</span>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        {{ form.as_p }}
-
-        <button type="submit" class="w-full bg-uh-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-uh-blue-600 focus:outline-none focus:ring-2 focus:ring-uh-blue-700 focus:ring-offset-2 transition-all duration-200">Login</button>
-      </form>
-
-      <div class="auth-links text-center text-sm text-gray-600 mt-8">
-        <p>Don't have an account?</p>
-        <p class="mt-2 space-x-4">
-          <a href="{% url 'accounts:register_patient' %}" class="font-medium text-uh-blue-700 hover:text-uh-blue-600">Register as Patient</a>
-          <span class="text-gray-400">|</span>
-          <a href="{% url 'accounts:register_provider' %}" class="font-medium text-uh-blue-700 hover:text-uh-blue-600">Register as Provider</a>
-        </p>
-        <p class="mt-4"><a href="{% url 'password_reset' %}" class="font-medium text-uh-blue-700 hover:text-uh-blue-600">Forgot Password?</a></p>
-      </div>
+<div class="login-wrapper">
+<div class="auth-page" style="width: 100%; max-height: calc(100vh - 100px); position: relative;">
+    <div class="auth-page-bg">
+        <video autoplay muted loop playsinline>
+            <source src="{% static 'videos/Back-ground.mp4' %}" type="video/mp4">
+        </video>
+        <div class="auth-page-overlay"></div>
     </div>
-  </div>
 
+    <div class="auth-container">
+        <!-- SIDEBAR -->
+        <div class="auth-sidebar">
+            <div class="auth-sidebar-content">
+                <img src="{% static 'images/side-image.png' %}" alt="UH Care" class="auth-sidebar-image">
+                <h2>Welcome Back</h2>
+                <p>Access your healthcare appointments and medical records</p>
+                
+                <div class="auth-sidebar-benefits">
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Licensed Healthcare Professionals</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure & Verified</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-clock"></i>
+                        <span>24/7 Support Available</span>
+                    </div>
+                    <div class="auth-sidebar-benefit">
+                        <i class="fas fa-home"></i>
+                        <span>Quality Home Care Services</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM SECTION -->
+        <div class="auth-form-section">
+            <div class="auth-form-header">
+                <h1>Login</h1>
+                <p>Sign in to your account to manage appointments</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="form-group {% if field.errors %}has-error{% endif %}">
+                        <label for="{{ field.id_for_label }}">
+                            {% if field.name == 'username' %}
+                                <i class="fas fa-envelope"></i>
+                            {% elif field.name == 'password' %}
+                                <i class="fas fa-lock"></i>
+                            {% endif %}
+                            {{ field.label }}
+                            {% if field.name == 'password' %}
+                                <a href="{% url 'password_reset' %}" style="font-size: 0.85rem; color: var(--primary); font-weight: 500;">Forgot?</a>
+                            {% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <ul class="field-errors">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-auth btn-auth-primary">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <p>Don't have an account? <a href="{% url 'accounts:register_patient' %}">Register as Patient</a></p>
+                <p>Are you a healthcare provider? <a href="{% url 'accounts:register_provider' %}">Register here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
 {% endblock %}

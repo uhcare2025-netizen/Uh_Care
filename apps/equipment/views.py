@@ -89,10 +89,7 @@ def rent_equipment(request, equipment_id):
     """
     equipment = get_object_or_404(Equipment, id=equipment_id, is_active=True)
     
-    # Providers are not allowed to rent equipment; they can view details only
-    if request.user.role == 'provider':
-        messages.error(request, 'Providers cannot rent equipment through this interface.')
-        return redirect('equipment:detail', slug=equipment.slug)
+    # Allow providers to rent equipment as normal users (they act as the customer)
 
     # treat stock/availability using available_units
     if equipment.available_units < 1:
@@ -115,11 +112,19 @@ def rent_equipment(request, equipment_id):
                     
                     # Create payment record linked to this equipment rental
                     from apps.payments.models import Payment
-                    # Do not pre-select payment method here; patient chooses on payment detail page
+                    # Prefill payment method from user's default payment method if present
+                    from apps.payments.models import UserPaymentMethod
+                    default_pm = None
+                    try:
+                        default_pm = UserPaymentMethod.objects.filter(user=request.user, is_default=True).first()
+                    except Exception:
+                        default_pm = None
+
                     Payment.objects.create(
                         patient=request.user,
                         amount=rental.total_amount,
                         payment_status='unpaid',
+                        payment_method=(default_pm.method if default_pm else None),
                         equipment_rental=rental,
                     )
                     
@@ -151,10 +156,7 @@ def buy_equipment(request, equipment_id):
     """
     equipment = get_object_or_404(Equipment, id=equipment_id, is_active=True)
     
-    # Providers are not allowed to buy equipment through the public store
-    if request.user.role == 'provider':
-        messages.error(request, 'Providers cannot purchase equipment through this interface.')
-        return redirect('equipment:detail', slug=equipment.slug)
+    # Allow providers to purchase equipment as normal users (they act as the customer)
 
     if equipment.available_units < 1:
         messages.error(request, 'This equipment is currently unavailable.')
@@ -177,10 +179,19 @@ def buy_equipment(request, equipment_id):
                     
                     # Create payment record linked to this equipment purchase
                     from apps.payments.models import Payment
+                    # Prefill payment method from user's default payment method if present
+                    from apps.payments.models import UserPaymentMethod
+                    default_pm = None
+                    try:
+                        default_pm = UserPaymentMethod.objects.filter(user=request.user, is_default=True).first()
+                    except Exception:
+                        default_pm = None
+
                     Payment.objects.create(
                         patient=request.user,
                         amount=purchase.total_amount,
                         payment_status='unpaid',
+                        payment_method=(default_pm.method if default_pm else None),
                         equipment_purchase=purchase,
                     )
                     

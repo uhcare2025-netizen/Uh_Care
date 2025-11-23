@@ -63,33 +63,86 @@
                             </span>
                         </div>
 
+                        <!-- Appointment Type -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Appointment Type</span>
+                            <span class="text-base font-semibold text-gray-800">{{ appointment.get_appointment_type_display }}</span>
+                        </div>
+
                         <!-- Date -->
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-500">Date</span>
-                            <span class="text-base font-semibold text-gray-800">{{ appointment.date|date:"F d, Y" }}</span>
+                            <span class="text-base font-semibold text-gray-800">{{ appointment.appointment_date|date:"F d, Y" }}</span>
                         </div>
+
+                        <!-- Patient Phone -->
+                        {% if appointment.patient_phone %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Phone</span>
+                            <span class="text-base font-semibold text-gray-800">{{ appointment.patient_phone }}</span>
+                        </div>
+                        {% endif %}
 
                         <!-- Time -->
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-gray-500">Time</span>
-                            <span class="text-base font-semibold text-gray-800">{{ appointment.start_time|time:"g:i A" }} - {{ appointment.end_time|time:"g:i A" }}</span>
+                            <span class="text-base font-semibold text-gray-800">{{ appointment.appointment_time|time:"g:i A" }} ({{ appointment.duration_minutes }} minutes)</span>
                         </div>
 
-                        <!-- Total Fee (Assumed from list page) -->
-                        {% if appointment.total_fee %}
-                        <div class="flex justify-between items-center pt-5 border-t border-gray-200">
-                            <span class="text-base font-medium text-gray-600">Total Fee</span>
-                            <span class="text-2xl font-bold text-uh-green-600">रू {{ appointment.total_fee }}</span>
+                        <!-- Location Type -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Location</span>
+                            <span class="text-base font-semibold text-gray-800">{{ appointment.get_location_type_display }}</span>
                         </div>
-                        {% endif %}
 
-                        <!-- Notes -->
-                        {% if appointment.notes %}
-                        <div class="pt-5 border-t border-gray-200">
-                            <h4 class="text-sm font-medium text-gray-500 mb-2">Notes</h4>
-                            <p class="text-base text-gray-700 bg-gray-50 rounded-lg p-4">{{ appointment.notes }}</p>
+                        <!-- Video link row (always shown for clarity) -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Video link</span>
+                            <span class="text-base font-semibold text-uh-blue-700">
+                                {% if appointment.video_link %}
+                                    <a href="{{ appointment.video_link }}" target="_blank" rel="noopener noreferrer">Join meeting</a>
+                                {% else %}
+                                    {% if appointment.get_location_type_display == 'Video Call' %}
+                                        <span class="text-sm text-gray-500">Not provided yet</span>
+                                    {% else %}
+                                        <span class="text-sm text-gray-400">N/A</span>
+                                    {% endif %}
+                                {% endif %}
+                            </span>
                         </div>
-                        {% endif %}
+
+                        <!-- Details grid: Reason, Symptoms, Patient Notes, Provider Notes, Diagnosis, Prescription -->
+                        <div class="pt-5 border-t border-gray-200 grid grid-cols-1 gap-6">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-gray-500 mb-2">Reason for Appointment</h4>
+                                <p class="text-base text-gray-700">{{ appointment.reason|default:"Not provided" }}</p>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-gray-500 mb-2">Symptoms</h4>
+                                <p class="text-base text-gray-700">{{ appointment.symptoms|default:"Not provided" }}</p>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-gray-500 mb-2">Patient Notes</h4>
+                                <p class="text-base text-gray-700">{{ appointment.patient_notes|default:"None" }}</p>
+                            </div>
+
+                            <div class="bg-white rounded-lg p-4 shadow-sm">
+                                <h4 class="text-sm font-medium text-gray-500 mb-2">Provider Notes</h4>
+                                <p class="text-base text-gray-800">{{ appointment.provider_notes|default:"Not yet added by provider" }}</p>
+                            </div>
+
+                            <div class="bg-white rounded-lg p-4 shadow-sm">
+                                <h4 class="text-sm font-medium text-gray-500 mb-2">Diagnosis</h4>
+                                <p class="text-base text-gray-800">{{ appointment.diagnosis|default:"Not provided" }}</p>
+                            </div>
+
+                            <div class="bg-white rounded-lg p-4 shadow-sm">
+                                <h4 class="text-sm font-medium text-gray-500 mb-2">Prescription</h4>
+                                <p class="text-base text-gray-800">{{ appointment.prescription|default:"Not provided" }}</p>
+                            </div>
+                        </div>
 
                     </div>
                 </div>

@@ -11,6 +11,7 @@ from django.db import transaction
 from decimal import Decimal
 from .models import Medicine, MedicineCategory, PharmacyOrder, PharmacyOrderItem
 from .forms import PharmacyOrderForm
+from apps.appointments.models import ServiceBooking
 
 
 def medicine_list(request, category_slug=None):
@@ -229,10 +230,7 @@ def checkout(request):
     
     if request.method == 'POST':
         form = PharmacyOrderForm(request.POST, request.FILES)
-        # Providers are not allowed to place pharmacy orders; they can view order details only
-        if request.user.role == 'provider':
-            messages.error(request, 'Providers cannot place pharmacy orders through this interface.')
-            return redirect('dashboard:provider')
+        # Allow providers to place pharmacy orders as normal customers
         if form.is_valid():
             try:
                 with transaction.atomic():
@@ -262,11 +260,19 @@ def checkout(request):
                     
                     # Create payment record linked to this pharmacy order
                     from apps.payments.models import Payment
-                    # Create payment without selecting a method here.
+                    # Prefill payment method from user's default payment method if present
+                    from apps.payments.models import UserPaymentMethod
+                    default_pm = None
+                    try:
+                        default_pm = UserPaymentMethod.objects.filter(user=request.user, is_default=True).first()
+                    except Exception:
+                        default_pm = None
+
                     Payment.objects.create(
                         patient=request.user,
                         amount=order.total_amount,
                         payment_status='unpaid',
+                        payment_method=(default_pm.method if default_pm else None),
                         pharmacy_order=order,
                     )
                     
@@ -284,10 +290,7 @@ def checkout(request):
             'delivery_phone': getattr(request.user, 'phone_number', ''),
         }
         form = PharmacyOrderForm(initial=initial)
-        # Prevent providers from using the checkout form (extra guard for GET)
-        if request.user.role == 'provider':
-            messages.error(request, 'Providers are not allowed to place pharmacy orders.')
-            return redirect('dashboard:provider')
+        # Providers are allowed to use the checkout form as customers
     
     delivery_charge = Decimal('100.00')
     total = (cart.subtotal or Decimal('0.00')) + delivery_charge
@@ -475,8 +478,8 @@ def provider_schedule(request):
     month = int(request.GET.get('month', current_date.month))
     year = int(request.GET.get('year', current_date.year))
     
-    # Get appointments for the selected month
-    appointments = Appointment.objects.filter(
+    # Get marketplace service bookings for the selected month
+    appointments = ServiceBooking.objects.filter(
         provider=user,
         appointment_date__year=year,
         appointment_date__month=month
@@ -509,14 +512,14 @@ def admin_dashboard(request):
     total_providers = User.objects.filter(role='provider', is_active=True).count()
     pending_providers = User.objects.filter(role='provider', is_active=False).count()
     
-    # Appointment statistics
-    total_appointments = Appointment.objects.count()
-    this_month_appointments = Appointment.objects.filter(
+    # Marketplace booking statistics
+    total_appointments = ServiceBooking.objects.count()
+    this_month_appointments = ServiceBooking.objects.filter(
         created_at__gte=this_month_start
     ).count()
     
-    pending_appointments = Appointment.objects.filter(status='pending').count()
-    completed_appointments = Appointment.objects.filter(status='completed').count()
+    pending_appointments = ServiceBooking.objects.filter(status='pending').count()
+    completed_appointments = ServiceBooking.objects.filter(status='completed').count()
     
     # Financial statistics
     total_revenue = Payment.objects.filter(
@@ -538,13 +541,13 @@ def admin_dashboard(request):
         is_active=True
     ).order_by('-total_bookings')[:5]
     
-    # Recent activity
-    recent_appointments = Appointment.objects.select_related(
+    # Recent marketplace bookings/activity
+    recent_appointments = ServiceBooking.objects.select_related(
         'patient', 'provider', 'service'
     ).order_by('-created_at')[:10]
     
     recent_payments = Payment.objects.select_related(
-        'patient', 'appointment'
+        'patient', 'appointment', 'service_booking'
     ).order_by('-created_at')[:10]
     
     stats = {
